@@ -5,7 +5,7 @@
 
 -- |
 -- - This file defines the main ADT for the Juvix front end language.
--- - This ADT corresponds to the bnf laid out [[https://github.com/cryptiumlabs/juvix/blob/develop/doc/Frontend/syntax.org][here]].
+-- - This ADT corresponds to the bnf laid out [[https://github.com/heliax/juvix/blob/develop/doc/Frontend/syntax.org][here]].
 -- - Later a trees that grow version of this will be implemented, so
 --   infix functions can better transition across syntax
 -- - Note :: The names for the types in =ArrowData= are stored in the
@@ -33,6 +33,7 @@ extensible
       | Signature Signature
       | Module Module
       | Function Function
+      | Handler Handler
       | Declaration Declaration
       | TypeClass
       | TypeClassInstance
@@ -175,6 +176,13 @@ extensible
     -- that may or may not have a guard before it
     data Function
       = Func (FunctionLike Expression)
+      deriving (Show, Read, Generic, NFData, D.Data, Eq)
+
+   -- 'Handler' is just like a regular function, but it is meant to also
+   -- contain perform effects. Handlers are meant to be used with Witch
+   -- primarily
+    data Handler
+      = Hand (FunctionLike Expression)
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
     -- 'Module' is like function, however it allows multiple top levels
@@ -469,6 +477,8 @@ makeLensesWith camelCaseFields ''FunctionLike'
 makeLensesWith camelCaseFields ''Module'
 
 makeLensesWith camelCaseFields ''Function'
+
+makeLensesWith camelCaseFields ''Handler'
 
 makeLensesWith camelCaseFields ''Lambda'
 

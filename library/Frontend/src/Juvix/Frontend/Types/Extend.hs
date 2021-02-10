@@ -53,6 +53,9 @@ extendNameType = defaultExtNameType
 extendFunction :: ExtFunction
 extendFunction = defaultExtFunction
 
+extendHandler :: ExtHandler
+extendHandler = defaultExtHandler
+
 extendArg :: ExtArg
 extendArg = defaultExtArg
 

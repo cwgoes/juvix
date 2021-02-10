@@ -60,6 +60,8 @@ extendNameType "NameType" [] [t|T|] Ext.extendNameType
 
 extendFunction "Function" [] [t|T|] Ext.extendFunction
 
+extendHandler "Handler" [] [t|T|] Ext.extendHandler
+
 extendModule "Module" [] [t|T|] Ext.extendModule
 
 extendModuleE "ModuleE" [] [t|T|] Ext.extendModuleE

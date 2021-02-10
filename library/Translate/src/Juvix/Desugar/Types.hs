@@ -46,6 +46,8 @@ extendNameType "NameType" [] [t|T|] Ext.extendNameType
 
 extendFunction "Function" [] [t|T|] $ Ext.extendFunction [t|T|]
 
+extendHandler "Handler" [] [t|T|] Ext.extendHandler
+
 extendArg "Arg" [] [t|T|] Ext.extendArg
 
 extendFunctionLike "FunctionLike" [] [t|T|] $ Ext.extendFunctionLike [t|T|]
