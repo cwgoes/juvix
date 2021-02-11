@@ -270,6 +270,8 @@ extensible
       | Let Let
       | ModuleE ModuleE
       | LetType LetType
+      | HandlerLet HandlerLet
+      | HandlerLetType HandlerLetType
       | Match Match
       | Name NameSymb
       | OpenExpr ModuleOpenExpr
@@ -389,6 +391,24 @@ extensible
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
     -- TODO ∷ have letSig
+
+    --------------------------------------------------
+    -- Handler Symbol Binding
+    --------------------------------------------------
+
+    data HandlerLet
+      = HandlerLet''
+          { handlerBindings :: FunctionLike Expression,
+            handlerBody :: Expression
+          }
+      deriving (Show, Read, Generic, NFData, D.Data, Eq)
+
+    data HandlerLetType
+      = HandlerLetType''
+          { handlerTypeBindings :: Type,
+            handlerTypeBody :: Expression
+          }
+      deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
     --------------------------------------------------
     -- Symbol Binding
