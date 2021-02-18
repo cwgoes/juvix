@@ -1,19 +1,12 @@
-module Juvix.FrontendDesugar.RemoveHandler.Transform where
+module Juvix.FrontendDesugar.RemoveHandlers.Transform where
 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Frontend.Types as Old
-import qualified Juvix.FrontendDesugar.RemoveHandler.Types as New
+import qualified Juvix.FrontendDesugar.RemoveHandlers.Types as New
 import Juvix.Library
 
-transformHandler :: Old.Handler -> New.TopLevel
-transformHandler (Old.Mod (Old.Like name args body)) =
-  transformGuardBody transformTop body
-    |> New.Like name (transformArg <$> args)
-    |> New.Func
-    |> New.Function
-
-transformHandlerE :: Old.HandlerE -> New.Expression
-transformHandlerE (Old.ModE (Old.Like name args body) restExpr) =
+transformHandler :: Old.Handler -> New.Expression
+transformHandler (Old.Handler (Old.Like name args body) restExpr) =
   transformGuardBody transformTop body
     |> New.Like name (transformArg <$> args)
     |> flip New.Let'' (transformExpression restExpr)

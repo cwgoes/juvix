@@ -17,7 +17,7 @@ import qualified Juvix.FrontendDesugar.RemoveDo.Transform as Do
 import qualified Juvix.FrontendDesugar.RemoveDo.Types as Target
 import qualified Juvix.FrontendDesugar.RemoveGuard.Transform as Guard
 import qualified Juvix.FrontendDesugar.RemoveModules.Transform as Module
-import qualified Juvix.FrontendDesugar.RemoveHandler.Transform as Handler
+import qualified Juvix.FrontendDesugar.RemoveHandlers.Transform as Handler
 import qualified Juvix.FrontendDesugar.RemovePunned.Transform as Punned
 import qualified Juvix.FrontendDesugar.RemoveSignature.Transform as Signature
 import Juvix.Library

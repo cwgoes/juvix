@@ -267,8 +267,8 @@ extensible
     data Expression
       = Cond (Cond Expression)
       | Constant Constant
-      | Let Let
       | ModuleE ModuleE
+      | Let Let
       | LetType LetType
       | HandlerLet HandlerLet
       | HandlerLetType HandlerLetType
@@ -499,6 +499,8 @@ makeLensesWith camelCaseFields ''Module'
 makeLensesWith camelCaseFields ''Function'
 
 makeLensesWith camelCaseFields ''Handler'
+
+makeLensesWith camelCaseFields ''HandlerLet'
 
 makeLensesWith camelCaseFields ''Lambda'
 
