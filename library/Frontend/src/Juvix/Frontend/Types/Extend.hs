@@ -134,12 +134,6 @@ extendLet = defaultExtLet
 extendLetType :: ExtLetType
 extendLetType = defaultExtLetType
 
-extendHandlerLet :: ExtHandlerLet
-extendHandlerLet = defaultExtHandlerLet
-
-extendHandlerLetType :: ExtHandlerLetType
-extendHandlerLetType = defaultExtHandlerLetType
-
 extendInfix :: ExtInfix
 extendInfix = defaultExtInfix
 

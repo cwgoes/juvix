@@ -114,10 +114,6 @@ extendLet "Let" [] [t|T|] Ext.extendLet
 
 extendLetType "LetType" [] [t|T|] Ext.extendLetType
 
-extendHandlerLet "HandlerLet" [] [t|T|] Ext.extendHandlerLet
-
-extendHandlerLetType "HandlerLetType" [] [t|T|] Ext.extendHandlerLetType
-
 extendInfix "Infix" [] [t|T|] Ext.extendInfix
 
 extendMatch "Match" [] [t|T|] Ext.extendMatch

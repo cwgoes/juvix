@@ -270,8 +270,6 @@ extensible
       | ModuleE ModuleE
       | Let Let
       | LetType LetType
-      | HandlerLet HandlerLet
-      | HandlerLetType HandlerLetType
       | Match Match
       | Name NameSymb
       | OpenExpr ModuleOpenExpr
@@ -393,24 +391,6 @@ extensible
     -- TODO ∷ have letSig
 
     --------------------------------------------------
-    -- Handler Symbol Binding
-    --------------------------------------------------
-
-    data HandlerLet
-      = HandlerLet''
-          { handlerBindings :: FunctionLike Expression,
-            handlerBody :: Expression
-          }
-      deriving (Show, Read, Generic, NFData, D.Data, Eq)
-
-    data HandlerLetType
-      = HandlerLetType''
-          { handlerTypeBindings :: Type,
-            handlerTypeBody :: Expression
-          }
-      deriving (Show, Read, Generic, NFData, D.Data, Eq)
-
-    --------------------------------------------------
     -- Symbol Binding
     --------------------------------------------------
 
@@ -499,8 +479,6 @@ makeLensesWith camelCaseFields ''Module'
 makeLensesWith camelCaseFields ''Function'
 
 makeLensesWith camelCaseFields ''Handler'
-
-makeLensesWith camelCaseFields ''HandlerLet'
 
 makeLensesWith camelCaseFields ''Lambda'
 

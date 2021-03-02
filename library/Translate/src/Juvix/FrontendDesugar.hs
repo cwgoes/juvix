@@ -28,7 +28,7 @@ op = desugar
 desugar :: [Initial.TopLevel] -> [Target.TopLevel]
 desugar xs =
   xs
-    |> fmap (Cond.transformTopLevel . Guard.transformTopLevel . Handler.transformTopLevel . Module.transformTopLevel)
+    |> fmap (Cond.transformTopLevel . Handler.transformTopLevel . Guard.transformTopLevel  . Module.transformTopLevel)
     |> Multiple.transformTopLevel
     |> Signature.transformTopLevel
     |> fmap (Do.transformTopLevel . Punned.transformTopLevel)

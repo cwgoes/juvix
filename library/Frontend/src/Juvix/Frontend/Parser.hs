@@ -534,21 +534,6 @@ letType = do
   body <- expression
   pure (Types.LetType'' typ body)
 
-handler :: Parser Types.HandlerLet
-handler = do
-  binds <- handlerModGen expression
-  reserved "in"
-  body <- expression
-  pure (Types.HandlerLet'' binds body)
-
-handlerType :: Parser Types.HandlerLetType
-handlerType = do
-  reserved "handler"
-  typ <- typePSN
-  reserved "in"
-  body <- expression
-  pure (Types.HandlerLetType'' typ body)
-
 --------------------------------------------------
 -- Cond
 --------------------------------------------------

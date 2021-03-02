@@ -1,29 +1,15 @@
 module Juvix.FrontendDesugar.RemoveHandlers.Transform where
 
-import qualified Data.List.NonEmpty as NonEmpty
-import qualified Juvix.Frontend.Types as Old
+import qualified Juvix.FrontendDesugar.RemoveGuard.Types as Old
 import qualified Juvix.FrontendDesugar.RemoveHandlers.Types as New
 import Juvix.Library
 
-transformHandler :: Old.Handler -> New.Expression
-transformHandler (Old.Handler (Old.Like name args body) restExpr) =
-  transformGuardBody transformTop body
+transformHandler :: Old.Handler -> New.TopLevel
+transformHandler (Old.Hand (Old.Like name args body)) =
+  transformExpression body
     |> New.Like name (transformArg <$> args)
-    |> flip New.Let'' (transformExpression restExpr)
-    |> New.Let
-
-transformTop ::
-  NonEmpty Old.TopLevel -> New.Expression
-transformTop body = undefined
-
-transformFunctionLike ::
-  Old.FunctionLike Old.Expression -> New.FunctionLike New.Expression
-transformFunctionLike (Old.Like name args body) =
-  New.Like name (transformArg <$> args) (transformGuardBody transformExpression body)
-
-transformGuardBody :: (a1 -> a2) -> Old.GuardBody a1 -> New.GuardBody a2
-transformGuardBody guardF (Old.Body x) = New.Body (guardF x)
-transformGuardBody guardF (Old.Guard x) = New.Guard (transformCond guardF x)
+    |> New.Func
+    |> New.Function
 
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
@@ -37,8 +23,6 @@ transformTopLevel (Old.Signature t) =
   New.Signature (transformSignature t)
 transformTopLevel (Old.Function t) =
   New.Function (transformFunction t)
-transformTopLevel (Old.Module m) =
-  transformModule m
 transformTopLevel (Old.Declaration i) =
   New.Declaration (transformDeclaration i)
 transformTopLevel Old.TypeClass =
@@ -55,8 +39,6 @@ transformExpression (Old.Primitive t) =
   New.Primitive (transformPrim t)
 transformExpression (Old.Cond c) =
   New.Cond (transformCond transformExpression c)
-transformExpression (Old.ModuleE m) =
-  transformModuleE m
 transformExpression (Old.Constant c) =
   New.Constant (transformConst c)
 transformExpression (Old.Let l) =
@@ -188,6 +170,11 @@ transformNameType (Old.NameType' sig name) =
 
 transformFunction :: Old.Function -> New.Function
 transformFunction (Old.Func f) = New.Func (transformFunctionLike f)
+
+transformFunctionLike ::
+  Old.FunctionLike Old.Expression -> New.FunctionLike New.Expression
+transformFunctionLike (Old.Like name args body) =
+  New.Like name (transformArg <$> args) (transformExpression body)
 
 transformModuleOpen :: Old.ModuleOpen -> New.ModuleOpen
 transformModuleOpen (Old.Open mod) = New.Open mod

@@ -65,3 +65,13 @@ guardTest =
         |> (\x -> AST.Func "foo" (pure x) Nothing)
         |> AST.Function
     ]
+
+handlerTest :: T.TestTree
+handlerTest =
+  shouldDesugar
+    "handlerTest"
+    "handler pure x = x"
+    [ AST.Like []
+      |> (\x -> AST.Func "pure" (pure x) Nothing)
+      |> AST.Function)
+    ]

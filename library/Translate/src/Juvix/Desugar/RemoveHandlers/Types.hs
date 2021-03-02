@@ -52,7 +52,7 @@ extendFunction "Function" [] [t|T|] Ext.extendFunction
 
 extendArg "Arg" [] [t|T|] Ext.extendArg
 
-extendFunctionLike "FunctionLike" [] [t|T|] $ const Ext.extendFunctionLike
+extendFunctionLike "FunctionLike" [] [t|T|] $ Ext.extendFunctionLike [t|T|]
 
 extendModuleOpen "ModuleOpen" [] [t|T|] Ext.extendModuleOpen
 

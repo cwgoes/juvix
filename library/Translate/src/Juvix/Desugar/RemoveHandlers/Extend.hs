@@ -1,13 +1,13 @@
 module Juvix.FrontendDesugar.RemoveHandlers.Extend
-  ( module Juvix.Frontend.Types.Extend,
-    module Juvix.FrontendDesugar.RemoveModules.Extend,
+  ( module Juvix.FrontendDesugar.RemoveGuard.Extend,
+    module Juvix.FrontendDesugar.RemoveHandlers.Extend,
   )
 where
 
 import Juvix.Frontend.Types.Base
-import Juvix.Frontend.Types.Extend hiding (extendExpression)
-import qualified Juvix.Frontend.Types.Extend as Ext
-import Juvix.Library hiding (Product, Sum)
+import Juvix.FrontendDesugar.RemoveGuard.Extend hiding (extendTopLevel)
+import qualified Juvix.FrontendDesugar.RemoveGuard.Extend as Ext
+import Juvix.Library
 
-extendExpression :: ExtExpression
-extendExpression = Ext.extendExpression {typeHandler = Nothing}
+extendTopLevel :: ExtTopLevel
+extendTopLevel = Ext.extendTopLevel {typeHandler = Nothing}
