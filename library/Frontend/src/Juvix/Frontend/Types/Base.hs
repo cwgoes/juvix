@@ -181,6 +181,9 @@ extensible
    -- 'Handler' is just like a regular function, but it is meant to also
    -- contain perform effects. Handlers are meant to be used with Witch
    -- primarily
+   -- However, Handlers are NOT scoped, meaning that they can't be defined
+   -- defined within another function. We CAN fix that, but it requires
+   -- us to make some choices, it's wise to have Witch up and running first.
     data Handler
       = Hand (FunctionLike Expression)
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
@@ -197,7 +200,7 @@ extensible
           }
       deriving (Show, Read, Generic, NFData, D.Data, Eq)
 
-    -- 'FunctionLike' is the generic version for both modules and functions
+    -- 'FunctionLike' is the generic version for modules, handlers and functions
     data FunctionLike a
       = Like
           { functionLikedName :: Symbol,

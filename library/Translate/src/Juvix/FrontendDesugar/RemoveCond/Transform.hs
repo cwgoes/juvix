@@ -1,15 +1,28 @@
-module Juvix.FrontendDesugar.RemoveHandlers.Transform where
+module Juvix.FrontendDesugar.RemoveCond.Transform where
 
-import qualified Juvix.FrontendDesugar.RemoveGuard.Types as Old
-import qualified Juvix.FrontendDesugar.RemoveHandlers.Types as New
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Juvix.FrontendDesugar.RemoveCond.Types as New
+import qualified Juvix.FrontendDesugar.RemoveHandlers.Types as Old
 import Juvix.Library
 
-transformHandler :: Old.Handler -> New.TopLevel
-transformHandler (Old.Hand (Old.Like name args body)) =
-  transformExpression body
-    |> New.Like name (transformArg <$> args)
-    |> New.Func
-    |> New.Function
+-- The actual transform we are doing
+transformCond :: Old.Cond Old.Expression -> New.Expression
+transformCond (Old.C xs) =
+  foldr f (fList last []) (NonEmpty.init xs)
+  where
+    fList (Old.CondExpression pred body) falses =
+      boolean "True" (transformExpression body)
+        |> (NonEmpty.:| falses)
+        |> New.Match'' (transformExpression pred)
+        |> New.Match
+    f conds falseBranch =
+      fList conds [boolean "False" falseBranch]
+    last =
+      NonEmpty.last xs
+    boolean symb body =
+      New.MatchCon (symb :| []) []
+        |> flip New.MatchLogic Nothing
+        |> flip New.MatchL body
 
 --------------------------------------------------------------------------------
 -- Boilerplate Transforms
@@ -23,8 +36,6 @@ transformTopLevel (Old.Signature t) =
   New.Signature (transformSignature t)
 transformTopLevel (Old.Function t) =
   New.Function (transformFunction t)
-transformTopLevel (Old.Handler t) =
-  transformHandler t
 transformTopLevel (Old.Declaration i) =
   New.Declaration (transformDeclaration i)
 transformTopLevel Old.TypeClass =
@@ -40,7 +51,7 @@ transformExpression (Old.List t) =
 transformExpression (Old.Primitive t) =
   New.Primitive (transformPrim t)
 transformExpression (Old.Cond c) =
-  New.Cond (transformCond transformExpression c)
+  transformCond c
 transformExpression (Old.Constant c) =
   New.Constant (transformConst c)
 transformExpression (Old.Let l) =
@@ -188,13 +199,6 @@ transformModuleOpenExpr (Old.OpenExpress modName expr) =
 transformArg :: Old.Arg -> New.Arg
 transformArg (Old.ImplicitA ml) = New.ImplicitA (transformMatchLogic ml)
 transformArg (Old.ConcreteA ml) = New.ConcreteA (transformMatchLogic ml)
-
-transformCond :: (t -> a) -> Old.Cond t -> New.Cond a
-transformCond trans (Old.C logs) = Old.C (transformCondLogic trans <$> logs)
-
-transformCondLogic :: (t -> a) -> Old.CondLogic t -> New.CondLogic a
-transformCondLogic trans (Old.CondExpression p b) =
-  New.CondExpression (transformExpression p) (trans b)
 
 --------------------------------------------------------------------------------
 -- Signatures

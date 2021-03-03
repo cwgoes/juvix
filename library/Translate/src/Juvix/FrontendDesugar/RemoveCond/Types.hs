@@ -1,7 +1,7 @@
-module Juvix.FrontendDesugar.RemoveHandlers.Types where
+module Juvix.FrontendDesugar.RemoveCond.Types where
 
 import Juvix.Frontend.Types.Base
-import qualified Juvix.FrontendDesugar.RemoveHandlers.Extend as Ext
+import qualified Juvix.FrontendDesugar.RemoveCond.Extend as Ext
 import Juvix.Library hiding (Product, Sum)
 
 data T
@@ -33,10 +33,6 @@ extendName "Name" [] [t|T|] Ext.extendName
 extendArrowSymbol "ArrowSymbol" [] [t|T|] Ext.extendArrowSymbol
 
 extendUniverseExpression "UniverseExpression" [] [t|T|] Ext.extendUniverseExpression
-
-extendCond "Cond" [] [t|T|] $ const Ext.extendCond
-
-extendCondLogic "CondLogic" [] [t|T|] $ const Ext.extendCondLogic
 
 extendAdt "Adt" [] [t|T|] Ext.extendAdt
 
@@ -101,6 +97,10 @@ extendNameSet "NameSet" [] [t|T|] $ const Ext.extendNameSet
 --------------------------------------------------------------------------------
 -- Instantiating for show derivation
 --------------------------------------------------------------------------------
+
+extendCond "Cond" [] [t|T|] $ const Ext.extendCond
+
+extendCondLogic "CondLogic" [] [t|T|] $ const Ext.extendCondLogic
 
 extendHandler "Handler" [] [t|T|] Ext.extendHandler
 

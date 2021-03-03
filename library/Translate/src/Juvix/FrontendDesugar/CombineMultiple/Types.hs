@@ -1,14 +1,12 @@
-module Juvix.FrontendDesugar.RemoveHandlers.Types where
+module Juvix.FrontendDesugar.CombineMultiple.Types where
 
 import Juvix.Frontend.Types.Base
-import qualified Juvix.FrontendDesugar.RemoveHandlers.Extend as Ext
+import qualified Juvix.FrontendDesugar.CombineMultiple.Extend as Ext
 import Juvix.Library hiding (Product, Sum)
 
 data T
 
 extendType "Type" [] [t|T|] Ext.extendType
-
-extendTopLevel "TopLevel" [] [t|T|] Ext.extendTopLevel
 
 extendDeclaration "Declaration" [] [t|T|] Ext.extendDeclaration
 
@@ -16,15 +14,17 @@ extendDeclarationExpression "DeclarationExpression" [] [t|T|] Ext.extendDeclarat
 
 extendInfixDeclar "InfixDeclar" [] [t|T|] Ext.extendInfixDeclar
 
+extendTopLevel "TopLevel" [] [t|T|] Ext.extendTopLevel
+
 extendData "Data" [] [t|T|] Ext.extendData
+
+extendNamedType "NamedType" [] [t|T|] Ext.extendNamedType
 
 extendList "List" [] [t|T|] Ext.extendList
 
 extendTuple "Tuple" [] [t|T|] Ext.extendTuple
 
 extendPrimitive "Primitive" [] [t|T|] Ext.extendPrimitive
-
-extendNamedType "NamedType" [] [t|T|] Ext.extendNamedType
 
 extendTypeRefine "TypeRefine" [] [t|T|] Ext.extendTypeRefine
 
@@ -33,10 +33,6 @@ extendName "Name" [] [t|T|] Ext.extendName
 extendArrowSymbol "ArrowSymbol" [] [t|T|] Ext.extendArrowSymbol
 
 extendUniverseExpression "UniverseExpression" [] [t|T|] Ext.extendUniverseExpression
-
-extendCond "Cond" [] [t|T|] $ const Ext.extendCond
-
-extendCondLogic "CondLogic" [] [t|T|] $ const Ext.extendCondLogic
 
 extendAdt "Adt" [] [t|T|] Ext.extendAdt
 
@@ -48,7 +44,7 @@ extendRecord "Record" [] [t|T|] Ext.extendRecord
 
 extendNameType "NameType" [] [t|T|] Ext.extendNameType
 
-extendFunction "Function" [] [t|T|] Ext.extendFunction
+extendFunction "Function" [] [t|T|] $ Ext.extendFunction [t|T|]
 
 extendArg "Arg" [] [t|T|] Ext.extendArg
 
@@ -82,7 +78,7 @@ extendDoBody "DoBody" [] [t|T|] Ext.extendDoBody
 
 extendExpRecord "ExpRecord" [] [t|T|] Ext.extendExpRecord
 
-extendLet "Let" [] [t|T|] Ext.extendLet
+extendLet "Let" [] [t|T|] $ Ext.extendLet [t|T|]
 
 extendLetType "LetType" [] [t|T|] Ext.extendLetType
 
@@ -102,10 +98,14 @@ extendNameSet "NameSet" [] [t|T|] $ const Ext.extendNameSet
 -- Instantiating for show derivation
 --------------------------------------------------------------------------------
 
-extendHandler "Handler" [] [t|T|] Ext.extendHandler
+extendCond "Cond" [] [t|T|] $ const Ext.extendCond
+
+extendCondLogic "CondLogic" [] [t|T|] $ const Ext.extendCondLogic
 
 extendModule "Module" [] [t|T|] Ext.extendModule
 
 extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
 
 extendModuleE "ModulE" [] [t|T|] Ext.extendModuleE
+
+extendHandler "Handler" [] [t|T|] Ext.extendHandler

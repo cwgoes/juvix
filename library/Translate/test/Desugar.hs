@@ -71,7 +71,50 @@ handlerTest =
   shouldDesugar
     "handlerTest"
     "handler pure x = x"
-    [ AST.Like []
-      |> (\x -> AST.Func "pure" (pure x) Nothing)
-      |> AST.Function)
+     [ AST.Name "x"
+       |> AST.Body
+       |> AST.Like "pure"
+       [
+         AST.MatchCon "x"
+         |> flip AST.MatchLogic Nothing
+         |> AST.ConcreteA
+       ]
+       |> AST.Func
+       |> AST.Function
+      ]
+
+-- Right [ Function' (FunctionX ("pure",
+--                              FunctionLikeX {
+--                                 extFunctionLike = ([ConcreteA' (
+--                                                        MatchLogic'
+--                                                          { matchLogicContents = MatchName' "x" ()
+--                                                          , matchLogicNamed = Nothing, annMatchLogic = ()}) ()]
+--                                                   , Name' ("x" :| []) ())
+--                                            } :| [],Nothing))
+--         ()
+--       ]
+
+viaTest :: T.TestTree
+viaTest =
+  shouldDesugar
+    "viaTest"
+    "let foo = a via b"
+    [ (AST.Name "a" :| AST.Name "b" :| [])
+      |> AST.App (AST.Name "x")
+      |> AST.Application
+      |> AST.Body
+      |> AST.Like "foo" []
+      |> AST.Func
+      |> AST.Function
     ]
+-- Right [ Function' (FunctionX ("foo",
+--                               FunctionLikeX {
+--                                  extFunctionLike = ([],
+--                                                     Application' (App' {
+--                                                                      applicationName = Name' ("b" :| []) ()
+--                                                                      , applicationArgs = Name' ("a" :| []) () :| [], annApp = ()
+--                                                                      }) ())
+--                                  } :| []
+--                              , Nothing))
+--         ()
+--       ]
