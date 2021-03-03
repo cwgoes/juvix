@@ -13,7 +13,10 @@ allDesugar :: T.TestTree
 allDesugar =
   T.testGroup
     "desugar Tests"
-    [guardTest]
+    [ guardTest
+    , handlerTest
+    , viaTest
+    ]
 
 shouldDesugar :: T.TestName -> ByteString -> [AST.TopLevel] -> T.TestTree
 shouldDesugar name x y =
@@ -70,51 +73,27 @@ handlerTest :: T.TestTree
 handlerTest =
   shouldDesugar
     "handlerTest"
-    "handler pure x = x"
+    "handler pure x = x" -- translated into `let pure x = x`
      [ AST.Name "x"
-       |> AST.Body
-       |> AST.Like "pure"
+       |> AST.Like
        [
-         AST.MatchCon "x"
+         AST.MatchName "x"
          |> flip AST.MatchLogic Nothing
          |> AST.ConcreteA
        ]
-       |> AST.Func
+       |> (\x -> AST.Func "pure" (pure x) Nothing)
        |> AST.Function
       ]
-
--- Right [ Function' (FunctionX ("pure",
---                              FunctionLikeX {
---                                 extFunctionLike = ([ConcreteA' (
---                                                        MatchLogic'
---                                                          { matchLogicContents = MatchName' "x" ()
---                                                          , matchLogicNamed = Nothing, annMatchLogic = ()}) ()]
---                                                   , Name' ("x" :| []) ())
---                                            } :| [],Nothing))
---         ()
---       ]
 
 viaTest :: T.TestTree
 viaTest =
   shouldDesugar
     "viaTest"
-    "let foo = a via b"
-    [ (AST.Name "a" :| AST.Name "b" :| [])
-      |> AST.App (AST.Name "x")
+    "let foo = a via b" -- translated into `let foo = b a`
+    [ (AST.Name "a" :| [])
+      |> AST.App (AST.Name "b")
       |> AST.Application
-      |> AST.Body
-      |> AST.Like "foo" []
-      |> AST.Func
+      |> AST.Like []
+      |> (\x -> AST.Func "foo" (pure x) Nothing)
       |> AST.Function
     ]
--- Right [ Function' (FunctionX ("foo",
---                               FunctionLikeX {
---                                  extFunctionLike = ([],
---                                                     Application' (App' {
---                                                                      applicationName = Name' ("b" :| []) ()
---                                                                      , applicationArgs = Name' ("a" :| []) () :| [], annApp = ()
---                                                                      }) ())
---                                  } :| []
---                              , Nothing))
---         ()
---       ]
