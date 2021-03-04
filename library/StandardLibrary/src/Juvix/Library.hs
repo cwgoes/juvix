@@ -24,7 +24,6 @@ module Juvix.Library
     module Capability.Sink,
     module Capability.Source,
     module Numeric.Natural,
-    module Juvix.Library.PrettyPrint,
     undefined,
     Data,
     (∨),
@@ -66,7 +65,6 @@ import Data.String (fromString)
 import qualified Data.Text as T
 import Data.Time.Clock.POSIX
 import GHC.Stack
-import Juvix.Library.PrettyPrint
 import Numeric.Natural
 import Protolude hiding
   ( (:.:),

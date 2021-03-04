@@ -28,6 +28,7 @@ dependencies:
 # parser
 - attoparsec
 - bytestring
+- pretty-compact
 
 default-extensions:
   - NoImplicitPrelude
@@ -36,6 +37,7 @@ default-extensions:
   - LambdaCase
   - TypeSynonymInstances
   - FlexibleInstances
+  - DefaultSignatures
 
 ghc-options:
   - -ferror-spans

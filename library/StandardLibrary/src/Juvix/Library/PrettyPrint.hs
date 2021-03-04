@@ -1,54 +1,52 @@
-{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
-module Juvix.Library.PrettyPrint where
+module Juvix.Library.PrettyPrint
+  ( module Juvix.Library.PrettyPrint,
+    module Text.PrettyPrint.Compact
+  ) where
 
-import qualified Data.Text as T
-import Protolude
-import qualified Type.Reflection as R
+import Text.PrettyPrint.Compact
+import Juvix.Library
 
-class PrettyPrint a where
-  prettyPrintValue :: a -> Text
-  default prettyPrintValue :: (Show a) => a -> Text
-  prettyPrintValue = show
 
-  prettyPrintType :: a -> Text
-  default prettyPrintType :: (R.Typeable a) => a -> Text
-  prettyPrintType = show . R.typeOf
+type family PrettyAnn a :: *
 
-instance (PrettyPrint a, R.Typeable a) => PrettyPrint [a] where
-  prettyPrintValue l =
-    T.concat ["[", T.intercalate ", " (fmap prettyPrintValue l), "]"]
+-- | Class for pretty-printing syntax-like types, which need to keep track of
+-- the surrounding precedence level.
+class Monoid (PrettyAnn a) => PrettySyntax a where
+  -- | The type of precedence levels. Defaults to 'Natural'.
+  type PrettyPrec a
+  type PrettyPrec a = Natural
 
-instance
-  (PrettyPrint a, PrettyPrint b, R.Typeable a, R.Typeable b) =>
-  PrettyPrint (Either a b)
-  where
-  prettyPrintValue = \case
-    Right r -> "Right " <> prettyPrintValue r
-    Left l -> "Left " <> prettyPrintValue l
+  -- | The initial precedence level. Defaults to @0@.
+  initPrec :: PrettyPrec a
+  default initPrec :: Num (PrettyPrec a) => PrettyPrec a
+  initPrec = 0
 
-instance
-  (PrettyPrint a, PrettyPrint b, R.Typeable a, R.Typeable b) =>
-  PrettyPrint (a, b)
-  where
-  prettyPrintValue (a, b) =
-    T.concat ["(", prettyPrintValue a, ", ", prettyPrintValue b, ")"]
+  -- | Pretty-prints a syntax value, given the current precedence value in
+  -- a reader environment.
+  prettyPrec' ::
+    HasReader "prec" (PrettyPrec a) m =>
+    a -> m (Doc (PrettyAnn a))
+  default prettyPrec' ::
+    (PrettyText a, HasReader "prec" (PrettyPrec a) m) =>
+    a -> m (Doc (PrettyAnn a))
+  prettyPrec' = pure . prettyText
 
-instance (PrettyPrint a, R.Typeable a) => PrettyPrint (Maybe a) where
-  prettyPrintValue (Just v) = T.concat ["Just ", prettyPrintValue v]
-  prettyPrintValue Nothing = "Nothing"
+-- | Pretty-print at the given precedence level.
+prettyPrec :: PrettySyntax a => PrettyPrec a -> a -> Doc (PrettyAnn a)
+prettyPrec prec x =
+  let MonadReader act = prettyPrec' x in
+  runReader act prec
 
-instance PrettyPrint ()
+-- | Pretty-print at the initial precedence level.
+prettyPrec0 :: forall a. PrettySyntax a => a -> Doc (PrettyAnn a)
+prettyPrec0 = prettyPrec (initPrec @a)
 
-instance PrettyPrint Bool
-
-instance PrettyPrint Int
-
-instance PrettyPrint Integer
-
-instance PrettyPrint Text
-
-instance PrettyPrint (a -> b) where
-  prettyPrintValue = const "λ"
-
-  prettyPrintType = const "λ"
+-- | Class for text-like types (e.g. messages), which don't have a concept of
+-- precedence.
+class Monoid (PrettyAnn a) => PrettyText a where
+  -- | Pretty-print a value as human-readable text.
+  prettyText :: a -> Doc (PrettyAnn a)
+  default prettyText :: Show a => a -> Doc (PrettyAnn a)
+  prettyText = text . show

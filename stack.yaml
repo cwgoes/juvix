@@ -63,6 +63,7 @@ extra-deps:
   commit: b75b853025ea75ba64f62f39d4524832f0117e36
 - github: metastatedev/extensible-data
   commit: d11dee6006169cb537e95af28c3541a24194dea8
+- pretty-compact-3.0@sha256:42ffe1c68be087f4e40be8772eb8a4611d4e1017af4ef0120cdb1fa831ab9523,1539
 
 ################################################################################
 # arithmetic circuits deps
