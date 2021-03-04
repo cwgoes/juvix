@@ -17,6 +17,7 @@
   + [[Translate]]
   + [[Environment]]
   + [[Library]]
+  + [[Feedback]]
   + [[Usage]]
   + [[Pipeline]]
 * Config
@@ -31,6 +32,7 @@
 * Main
 - _Relies on_
   + [[Library]]
+  + [[Feedback]]
 * Options
 - _Relies on_
   + [[Library]]
@@ -41,3 +43,8 @@
   + [[Types]]
   + [[Types]]
   + [[Library]]
+* Wrap
+- _Relies on_
+  + [[Environment]]
+  + [[Library]]
+  + [[Pipeline]]

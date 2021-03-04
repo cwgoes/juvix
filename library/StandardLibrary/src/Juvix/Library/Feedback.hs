@@ -9,6 +9,7 @@ import Juvix.Library
 data Feedback msg a
   = Succes msg a -- Indicate succes.
   | Fail msg -- Indicate a failure.
+  deriving (Show)
 
 instance Functor (Feedback msg) where
   fmap f (Succes msgs x) = Succes msgs (f x)

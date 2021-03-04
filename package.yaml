@@ -21,6 +21,7 @@ dependencies:
   - extensible-data
   - capability >= 0.2.0.0
   - syb
+  - temporary
   ###########################
   # Libraries
   ###########################
