@@ -114,4 +114,4 @@ volumes:
 
 trigger:
   event:
-    - pull_request
+    - push
