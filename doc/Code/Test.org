@@ -23,3 +23,8 @@
   + [[Traverse]]
   + [[Library]]
   + [[Pipeline]]
+* examples
+** demo-tofix
+** demo
+** rec-groups
+** test
