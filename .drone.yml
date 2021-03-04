@@ -1,6 +1,6 @@
 kind: pipeline
 type: docker
-name: juvix-ci-build
+name: juvix-ci-build-push
 
 workspace:
   path: /drone/workspace
@@ -121,7 +121,7 @@ trigger:
 ---
 kind: pipeline
 type: docker
-name: juvix-ci-build
+name: juvix-ci-build-pr
 
 workspace:
   path: /drone/workspace
