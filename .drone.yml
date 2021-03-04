@@ -115,3 +115,5 @@ volumes:
 trigger:
   event:
     - push
+  repo:
+    - heliaxdev/juvix
