@@ -117,3 +117,126 @@ trigger:
     - push
   repo:
     - heliaxdev/juvix
+
+---
+kind: pipeline
+type: docker
+name: juvix-ci-build
+
+workspace:
+  path: /drone/workspace
+
+environment:
+  STACK_ROOT: /drone/workspace/.stack
+
+steps:
+  - name: restore-cache
+    image: meltwater/drone-cache
+    settings:
+      backend: "s3"
+      restore: true
+      bucket: juvix-drone-cache
+      region: eu-west-1
+      cache_key: "{{ checksum \"stack.yaml\" }}-{{ checksum \"package.yaml\" }}"
+      archive_format: "gzip"
+      mount:
+        - ./.stack-work
+        - ./.stack
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws_secret_access_key
+    volumes:
+      - name: cache
+        path: /tmp/cache
+
+  - name: test-suite
+    image: cryptiumlabs/juvix-ci-2
+    pull: if-not-exists
+    commands:
+      - make test
+    depends_on:
+      - restore-cache
+
+  - name: rebuild-cache
+    image: meltwater/drone-cache
+    volumes:
+      - name: cache
+        path: /tmp/cache
+    settings:
+      backend: "s3"
+      bucket: juvix-drone-cache
+      region: eu-west-1
+      rebuild: true
+      archive_format: "gzip"
+      override: false
+      cache_key: "{{ checksum \"stack.yaml\" }}-{{ checksum \"package.yaml\" }}"
+      mount:
+        - ./.stack-work
+        - ./.stack
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws_secret_access_key
+    depends_on:
+      - test-suite
+
+  - name: check-formatting
+    image: cryptiumlabs/juvix-ci-2
+    pull: if-not-exists
+    failure: fast
+    commands:
+      - sh ./scripts/check-formatting.sh
+    depends_on:
+      - test-suite
+
+  - name: check-org-gen
+    image: cryptiumlabs/juvix-ci-2
+    pull: if-not-exists
+    failure: fast
+    commands:
+      - sh ./scripts/check-org-gen.sh
+    depends_on:
+      - test-suite
+
+  - name: test-parser
+    image: cryptiumlabs/juvix-ci-2
+    pull: if-not-exists
+    failure: fast
+    commands:
+      - make test-parser
+    depends_on:
+      - test-suite
+
+  - name: test-typecheck
+    image: cryptiumlabs/juvix-ci-2
+    pull: if-not-exists
+    failure: fast
+    commands:
+      - make test-typecheck
+    depends_on:
+      - test-suite
+
+  - name: test-compile
+    image: cryptiumlabs/juvix-ci-2
+    pull: if-not-exists
+    failure: fast
+    commands:
+      - make test-compile
+    depends_on:
+      - test-suite
+
+volumes:
+  - name: cache
+    host: 
+      path: /tmp/cache
+
+trigger:
+  event:
+    - pull_request
+  repo:
+    exclude:
+      - heliaxdev/juvix
+
