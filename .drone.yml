@@ -116,7 +116,8 @@ trigger:
   event:
     - push
   repo:
-    - heliaxdev/juvix
+    include:
+      - heliaxdev/juvix
 
 ---
 kind: pipeline
