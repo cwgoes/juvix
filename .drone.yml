@@ -114,10 +114,8 @@ volumes:
 
 trigger:
   event:
-    - push
-  repo:
-    include:
-      - heliaxdev/juvix
+    include: 
+      - push
 
 ---
 kind: pipeline
@@ -237,7 +235,5 @@ volumes:
 trigger:
   event:
     - pull_request
-  repo:
-    exclude:
-      - heliaxdev/juvix
 
+    
