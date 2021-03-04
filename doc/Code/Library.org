@@ -1325,6 +1325,9 @@ Can be added to via core translation
       constructs in =Protolude=
 - _Relies on_
   + [[PrettyPrint]]
+***** Feedback
+- _Relies on_
+  + [[Library]]
 ***** HashMap
 - The HashMap for the codebase.
 - Basically just imports Data.HashMap.Strict
