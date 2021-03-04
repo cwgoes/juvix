@@ -1,5 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 module Juvix.Library.PrettyPrint
   ( module Juvix.Library.PrettyPrint,
     module Text.PrettyPrint.Compact
