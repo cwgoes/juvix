@@ -28,6 +28,7 @@ dependencies:
 # parser
 - attoparsec
 - bytestring
+- mtl
 
 default-extensions:
   - NoImplicitPrelude
