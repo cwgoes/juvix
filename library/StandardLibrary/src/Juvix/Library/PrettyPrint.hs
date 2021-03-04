@@ -4,7 +4,8 @@ module Juvix.Library.PrettyPrint
   ) where
 
 import Text.PrettyPrint.Compact
-import Juvix.Library
+import Juvix.Library hiding (show)
+import qualified Text.Show as Show
 
 
 -- | Annotations, which can be used for e.g. syntax highlighting
@@ -35,10 +36,13 @@ prettyPrec prec x =
 prettyPrec0 :: PrettySyntax a => a -> Doc (PrettyAnn a)
 prettyPrec0 = prettyPrec 0
 
+show :: (Monoid ann, Show a) => a -> Doc ann
+show = text . Show.show
+
 -- | Class for text-like types (e.g. messages), which don't have a concept of
 -- precedence.
 class Monoid (PrettyAnn a) => PrettyText a where
   -- | Pretty-print a value as human-readable text.
   prettyText :: a -> Doc (PrettyAnn a)
   default prettyText :: Show a => a -> Doc (PrettyAnn a)
-  prettyText = text . show
+  prettyText = text . Show.show
