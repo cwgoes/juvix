@@ -55,7 +55,7 @@ contextToCore ctx param = do
 defName :: FF.CoreDef primTy primVal -> NameSymbol.T
 defName = \case
   FF.CoreDef (IR.GDatatype (IR.Datatype {dataName})) -> dataName
-  FF.CoreDef (IR.GDataCon  (IR.DataCon {conName})) -> conName
+  FF.CoreDef (IR.GDataCon (IR.DataCon {conName})) -> conName
   FF.CoreDef (IR.GFunction (IR.Function {funName})) -> funName
   FF.CoreDef (IR.GAbstract (IR.Abstract {absName})) -> absName
   FF.SpecialDef x _ -> x

@@ -13,9 +13,9 @@ allDesugar :: T.TestTree
 allDesugar =
   T.testGroup
     "desugar Tests"
-    [ guardTest
-    , handlerTest
-    , viaTest
+    [ guardTest,
+      handlerTest,
+      viaTest
     ]
 
 shouldDesugar :: T.TestName -> ByteString -> [AST.TopLevel] -> T.TestTree
@@ -74,16 +74,15 @@ handlerTest =
   shouldDesugar
     "handlerTest"
     "handler pure x = x" -- translated into `let pure x = x`
-     [ AST.Name "x"
-       |> AST.Like
-       [
-         AST.MatchName "x"
-         |> flip AST.MatchLogic Nothing
-         |> AST.ConcreteA
-       ]
-       |> (\x -> AST.Func "pure" (pure x) Nothing)
-       |> AST.Function
-      ]
+    [ AST.Name "x"
+        |> AST.Like
+          [ AST.MatchName "x"
+              |> flip AST.MatchLogic Nothing
+              |> AST.ConcreteA
+          ]
+        |> (\x -> AST.Func "pure" (pure x) Nothing)
+        |> AST.Function
+    ]
 
 viaTest :: T.TestTree
 viaTest =
@@ -91,9 +90,9 @@ viaTest =
     "viaTest"
     "let foo = a via b" -- translated into `let foo = b a`
     [ (AST.Name "a" :| [])
-      |> AST.App (AST.Name "b")
-      |> AST.Application
-      |> AST.Like []
-      |> (\x -> AST.Func "foo" (pure x) Nothing)
-      |> AST.Function
+        |> AST.App (AST.Name "b")
+        |> AST.Application
+        |> AST.Like []
+        |> (\x -> AST.Func "foo" (pure x) Nothing)
+        |> AST.Function
     ]
