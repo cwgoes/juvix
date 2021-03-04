@@ -15,6 +15,7 @@ module Juvix.Library.Usage
 where
 
 import Juvix.Library hiding (pred, show)
+import qualified Juvix.Library.PrettyPrint as Pp
 
 -- | Usage is an alias for the semiring representation
 type T = NatAndw
@@ -46,6 +47,12 @@ instance Semiring NatAndw where
   SNat x <.> SNat y = SNat (x * y)
   Omega <.> _ = Omega
   _ <.> Omega = Omega
+
+type instance Pp.PrettyAnn NatAndw = ()
+
+instance Pp.PrettySyntax NatAndw where
+  prettyPrec' (SNat π) = pure $ Pp.show π
+  prettyPrec' Omega    = pure "ω"
 
 pred :: NatAndw -> NatAndw
 pred (SNat x) = SNat (x - 1)
