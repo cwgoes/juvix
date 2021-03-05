@@ -46,8 +46,8 @@ prettyPrec prec x =
 prettyPrec0 :: PrettySyntax a => a -> Doc (Ann a)
 prettyPrec0 = prettyPrec Outer
 
-show :: (Monoid ann, Show a) => a -> Doc ann
-show = text . Show.show
+withPrec :: PrecReader m => Prec -> m a -> m a
+withPrec p = local @"prec" \_ -> p
 
 -- | Class for text-like types (e.g. messages), which don't have a concept of
 -- precedence.
@@ -56,3 +56,37 @@ class Monoid (Ann a) => PrettyText a where
   prettyText :: a -> Doc (Ann a)
   default prettyText :: Show a => a -> Doc (Ann a)
   prettyText = text . Show.show
+
+
+show :: (Monoid ann, Show a) => a -> Doc ann
+show = text . Show.show
+
+hsepA ::
+  (Applicative f, Traversable t, Monoid ann) =>
+  t (f (Doc ann)) -> f (Doc ann)
+hsepA = fmap hsep . sequenceA . toList
+
+sepA ::
+  (Applicative f, Traversable t, Monoid ann) =>
+  t (f (Doc ann)) -> f (Doc ann)
+sepA = fmap sep . sequenceA . toList
+
+hcatA ::
+  (Applicative f, Traversable t, Monoid ann) =>
+  t (f (Doc ann)) -> f (Doc ann)
+hcatA = fmap hcat . sequenceA . toList
+
+vcatA ::
+  (Applicative f, Traversable t, Monoid ann) =>
+  t (f (Doc ann)) -> f (Doc ann)
+vcatA = fmap vcat . sequenceA . toList
+
+punctuateA ::
+  (Applicative f, Traversable t, Monoid ann) =>
+  f (Doc ann) -> t (f (Doc ann)) -> f [Doc ann]
+punctuateA sep docs = punctuate <$> sep <*> sequenceA (toList docs)
+
+hangA ::
+  (Applicative f, Monoid ann) =>
+  Int -> f (Doc ann) -> f (Doc ann) -> f (Doc ann)
+hangA i = liftA2 $ hang i
