@@ -31,13 +31,21 @@ dependencies:
 - pretty-compact
 
 default-extensions:
+  - BlockArguments
+  - ConstraintKinds
+  - DataKinds
+  - DefaultSignatures
+  - DeriveGeneric
+  - FlexibleContexts
+  - FlexibleInstances
+  - LambdaCase
   - NoImplicitPrelude
   - OverloadedStrings
   - RankNTypes
-  - LambdaCase
+  - TupleSections
+  - TypeApplications
+  - TypeFamilies
   - TypeSynonymInstances
-  - FlexibleInstances
-  - DefaultSignatures
 
 ghc-options:
   - -ferror-spans
