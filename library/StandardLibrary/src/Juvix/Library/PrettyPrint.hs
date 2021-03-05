@@ -4,6 +4,9 @@ module Juvix.Library.PrettyPrint
   ) where
 
 import Text.PrettyPrint.Compact
+  hiding (lparen, rparen, langle, rangle, lbrace, rbrace,
+          lbracket, rbracket, squote, dquote, semi, colon,
+          comma, space, dot, backslash, equals)
 import Juvix.Library hiding (show)
 import qualified Text.Show as Show
 
