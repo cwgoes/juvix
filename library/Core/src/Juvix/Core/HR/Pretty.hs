@@ -1,10 +1,9 @@
-{-# OPTIONS_GHC -fdefer-typed-holes #-}
-
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Juvix.Core.HR.Pretty
   ( PPAnn' (..),
     PPAnn,
+    Doc,
     PrimPretty1,
     PrimPretty,
   ) where

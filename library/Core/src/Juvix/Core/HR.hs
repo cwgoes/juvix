@@ -7,4 +7,4 @@ where
 
 import Juvix.Core.HR.Parser
 import Juvix.Core.HR.Types
-import Juvix.Core.HR.Pretty
+import Juvix.Core.HR.Pretty hiding (Doc)
