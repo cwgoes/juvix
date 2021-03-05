@@ -122,4 +122,4 @@ run ctx opt = do
             >>= Compile.writeout fout
             >>= liftIO . print
         Version -> liftIO $ putDoc versionDoc
-        _ -> liftIO $ putText "Not implemented yet"
+        _ -> Feedback.FeedbackT $ return $ Feedback.Fail ["Not implemented yet."]
