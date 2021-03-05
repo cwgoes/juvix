@@ -295,12 +295,16 @@ packages:
   original:
     url: https://github.com/metastatedev/extensible-data/archive/d11dee6006169cb537e95af28c3541a24194dea8.tar.gz
 - completed:
-    hackage: pretty-compact-3.0@sha256:42ffe1c68be087f4e40be8772eb8a4611d4e1017af4ef0120cdb1fa831ab9523,1539
+    size: 360019
+    url: https://github.com/andy-morris/prettiest/archive/448528fb0f568954d1bbfe164301057d7d1bf12a.tar.gz
+    name: pretty-compact
+    version: '3.0'
+    sha256: bb0a6a48909103ec717b3f93c5705ff78b9077c2f878669734dddfeed81358eb
     pantry-tree:
-      size: 360
-      sha256: 18b9e87bdc288c98e2953b3c929da6a30b7630da1d7a878deb0171edf54d6871
+      size: 2327
+      sha256: c768b2faa4e5d7b791d987679616d8f90f169a73ae3fd38c20f37f08d02d930d
   original:
-    hackage: pretty-compact-3.0@sha256:42ffe1c68be087f4e40be8772eb8a4611d4e1017af4ef0120cdb1fa831ab9523,1539
+    url: https://github.com/andy-morris/prettiest/archive/448528fb0f568954d1bbfe164301057d7d1bf12a.tar.gz
 - completed:
     size: 36625
     url: https://github.com/adjoint-io/pairing/archive/2ef8ba869608432f55e32afc385b7fa75d4d1742.tar.gz
