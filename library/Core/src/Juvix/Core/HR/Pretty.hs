@@ -5,6 +5,8 @@
 module Juvix.Core.HR.Pretty
   ( PPAnn' (..),
     PPAnn,
+    PrimPretty1,
+    PrimPretty,
   ) where
 
 import Juvix.Library
