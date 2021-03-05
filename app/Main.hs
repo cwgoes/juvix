@@ -4,6 +4,7 @@ import qualified Compile as Compile
 import qualified Config as Config
 import Development.GitRev
 import Juvix.Library
+import qualified Juvix.Library.Feedback as Feedback
 import Options
 import Options.Applicative
 import System.Directory
@@ -93,28 +94,32 @@ interactiveDoc =
         ]
     ]
 
+-- | Run the main program.
 run :: Context -> Options -> IO ()
-run _ctx (Options cmd configPath) = do
-  maybeConfig <- Config.loadT configPath
-  case cmd of
-    Parse fin -> do
-      Compile.parse fin >> pure ()
-    Typecheck fin backend -> do
-      Compile.typecheck fin backend >> pure ()
-    Compile fin fout backend -> do
-      Compile.compile fin fout backend
-    Version -> do
-      putDoc versionDoc
-      exitSuccess
-    {-
-    Interactive -> do
-      putDoc interactiveDoc
-      if isJust maybeConfig
-        then putStrLn ("Loaded runtime configuration from " <> configPath <> "\n")
-        else putStrLn ("Loaded default runtime configuration.\n" :: Text)
-      Interactive.interactive ctx conf
-      exitSuccess
-    -}
-    _ -> do
-      putText "Not yet implemented!"
-      exitFailure
+run ctx opt = do
+  feedback <- Feedback.runFeedbackT $ run' ctx opt
+  case feedback of
+    Feedback.Succes msgs _ -> mapM putStrLn msgs >> exitSuccess
+    Feedback.Fail msgs -> mapM putStrLn msgs >> exitFailure
+  where
+    run' :: Context -> Options -> Compile.Pipeline ()
+    run' _ (Options cmd _) = do
+      case cmd of
+        Parse fin ->
+          do (liftIO $ readFile fin)
+            >>= Compile.parse
+            >>= liftIO . print
+        Typecheck fin backend ->
+          do (liftIO $ readFile fin)
+            >>= Compile.parse
+            >>= Compile.typecheck backend
+            >>= liftIO . print
+        Compile fin fout backend ->
+          do (liftIO $ readFile fin)
+            >>= Compile.parse
+            >>= Compile.typecheck backend
+            >>= Compile.compile backend
+            >>= Compile.writeout fout
+            >>= liftIO . print
+        Version -> liftIO $ putDoc versionDoc
+        _ -> liftIO $ putText "Not implemented yet"
