@@ -16,6 +16,8 @@ pattern Sig π x s t = Sig0 π s t x
 
 pattern Let π x l b = Let0 π l b x
 
-{-# COMPLETE Star, PrimTy, Pi, Sig, Lam, Let, Elim #-}
+{-# COMPLETE
+    Star, PrimTy, Prim, Pi, Lam, Sig, Pair, Let, UnitTy, Unit, Elim
+  #-}
 
 IR.extendElim "Elim" [] [t|T|] extElim
