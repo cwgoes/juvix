@@ -83,9 +83,13 @@ ppBinders ::
   [Binder primTy primVal] -> Term primTy primVal -> m Doc
 ppBinders bs t = PP.hangA 2 (PP.sepA $ map ppBinder1 bs) (ppOuter t)
   where
-    ppBinder1 (b, π, x, s) = PP.hcatA $
+    ppBinder1 (b, π, x, s) = PP.hsepA $
       [ ppBind b,
-        parens <$> PP.hsepA [ppUsage π, pure $ name x, pure colon, ppOuter s],
+        parens <$> PP.sepA [
+          PP.hsepA [ppUsage π, pure pipe],
+          pure $ PP.hsep [name x, colon],
+          ppOuter s
+        ],
         pure arrow
       ]
     ppBind = pure . annotate ATyCon . \case PI -> "Π"; SIG -> "Σ"
