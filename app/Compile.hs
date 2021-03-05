@@ -94,9 +94,7 @@ compile backend term = do
   case res of
     Right c -> do
       return $ M.untypedContractToSource (fst c)
-    Left err -> do
-      liftIO $ T.putStrLn (show err)
-      liftIO $ exitFailure
+    Left err -> Feedback.FeedbackT $ return $ Feedback.Fail [show err]
 
 -- | Write the output code to a given file.
 writeout :: FilePath -> OutputCode -> Pipeline ()
