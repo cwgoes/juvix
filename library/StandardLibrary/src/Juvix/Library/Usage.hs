@@ -48,7 +48,7 @@ instance Semiring NatAndw where
   Omega <.> _ = Omega
   _ <.> Omega = Omega
 
-type instance Pp.PrettyAnn NatAndw = ()
+type instance Pp.Ann NatAndw = ()
 
 instance Pp.PrettySyntax NatAndw where
   prettyPrec' (SNat π) = pure $ Pp.show π

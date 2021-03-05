@@ -9,40 +9,39 @@ import qualified Text.Show as Show
 
 
 -- | Annotations, which can be used for e.g. syntax highlighting
-type family PrettyAnn a :: *
+type family Ann a :: *
 
 type Prec = Natural
 
 -- | Class for pretty-printing syntax-like types, which need to keep track of
 -- the surrounding precedence level.
-class Monoid (PrettyAnn a) => PrettySyntax a where
+class Monoid (Ann a) => PrettySyntax a where
   -- | Pretty-prints a syntax value, given the current precedence value in
   -- a reader environment.
   prettyPrec' ::
     HasReader "prec" Prec m =>
-    a -> m (Doc (PrettyAnn a))
+    a -> m (Doc (Ann a))
   default prettyPrec' ::
-    (PrettyText a, HasReader "prec" Prec m) =>
-    a -> m (Doc (PrettyAnn a))
+    a -> m (Doc (Ann a))
   prettyPrec' = pure . prettyText
 
 -- | Pretty-print at the given precedence level.
-prettyPrec :: PrettySyntax a => Prec -> a -> Doc (PrettyAnn a)
+prettyPrec :: PrettySyntax a => Prec -> a -> Doc (Ann a)
 prettyPrec prec x =
   let MonadReader act = prettyPrec' x in
   runReader act prec
 
 -- | Pretty-print at the initial precedence level.
-prettyPrec0 :: PrettySyntax a => a -> Doc (PrettyAnn a)
-prettyPrec0 = prettyPrec 0
+prettyPrec0 :: PrettySyntax a => a -> Doc (Ann a)
+prettyPrec0 = prettyPrec Outer
 
 show :: (Monoid ann, Show a) => a -> Doc ann
 show = text . Show.show
 
 -- | Class for text-like types (e.g. messages), which don't have a concept of
 -- precedence.
-class Monoid (PrettyAnn a) => PrettyText a where
+class Monoid (Ann a) => PrettyText a where
   -- | Pretty-print a value as human-readable text.
-  prettyText :: a -> Doc (PrettyAnn a)
-  default prettyText :: Show a => a -> Doc (PrettyAnn a)
+  prettyText :: a -> Doc (Ann a)
+  default prettyText :: Show a => a -> Doc (Ann a)
   prettyText = text . Show.show
