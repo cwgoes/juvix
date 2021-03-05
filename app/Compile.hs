@@ -44,11 +44,8 @@ parse :: Code -> Pipeline FE.FinalContext
 parse code = do
   core <- liftIO $ toCore_wrap code
   case core of
-    Right ctx -> do
-      pure ctx
-    Left err -> do
-      liftIO $ T.putStrLn (show err)
-      liftIO $ exitFailure
+    Right ctx -> return ctx
+    Left err -> Feedback.FeedbackT $ return $ Feedback.Fail [show err]
   where
     toCore_wrap :: Code -> IO (Either Pipeline.Error FE.FinalContext)
     toCore_wrap code = do
