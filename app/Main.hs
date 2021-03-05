@@ -4,15 +4,11 @@ import qualified Compile as Compile
 import qualified Config as Config
 import Development.GitRev
 import Juvix.Library
-import Juvix.Library.Feedback
 import Options
 import Options.Applicative
 import System.Directory
-import qualified System.IO as IO
 import Text.PrettyPrint.ANSI.Leijen hiding ((<>))
 import Text.RawString.QQ
-import qualified Wrap as Wrap
-import qualified Prelude as P
 
 context :: IO Context
 context = do
@@ -97,54 +93,28 @@ interactiveDoc =
         ]
     ]
 
--- run :: Context -> Options -> IO ()
--- run _ctx (Options cmd configPath) = do
---   maybeConfig <- Config.loadT configPath
---   case cmd of
---     Parse fin -> do
---       Compile.parse fin >> pure ()
---     Typecheck fin backend -> do
---       Compile.typecheck fin backend >> pure ()
---     Compile fin fout backend -> do
---       Compile.compile fin fout backend
---     Version -> do
---       putDoc versionDoc
---       exitSuccess
---     {-
---     Interactive -> do
---       putDoc interactiveDoc
---       if isJust maybeConfig
---         then putStrLn ("Loaded runtime configuration from " <> configPath <> "\n")
---         else putStrLn ("Loaded default runtime configuration.\n" :: Text)
---       Interactive.interactive ctx conf
---       exitSuccess
---     -}
---     _ -> do
---       putText "Not yet implemented!"
---       exitFailure
-
 run :: Context -> Options -> IO ()
-run _ (Options cmd _) = do
+run _ctx (Options cmd configPath) = do
+  maybeConfig <- Config.loadT configPath
   case cmd of
     Parse fin -> do
-      code <- readFile fin
-      feedback <- runFeedbackT $ Compile.parse code
-      print feedback
-
+      Compile.parse fin >> pure ()
     Typecheck fin backend -> do
-      code <- readFile fin
-      feedback <- runFeedbackT $ Compile.parse code >>= Compile.typecheck backend
-      print feedback
-
+      Compile.typecheck fin backend >> pure ()
     Compile fin fout backend -> do
-      code <- readFile fin
-      feedback <- runFeedbackT $  Compile.parse     code
-                              >>= Compile.typecheck Michelson
-                              >>= Compile.compile   Michelson
-                              >>= Compile.store     fout
-      print feedback
-
-
-testparse = run undefined (Options (Parse "test/examples/Addition.ju") undefined)
-testcheck = run undefined (Options (Typecheck "test/examples/Addition.ju" Michelson) undefined)
-testcomp = run undefined (Options (Compile "test/examples/Addition.ju" "hoi.tz" Michelson) undefined)
+      Compile.compile fin fout backend
+    Version -> do
+      putDoc versionDoc
+      exitSuccess
+    {-
+    Interactive -> do
+      putDoc interactiveDoc
+      if isJust maybeConfig
+        then putStrLn ("Loaded runtime configuration from " <> configPath <> "\n")
+        else putStrLn ("Loaded default runtime configuration.\n" :: Text)
+      Interactive.interactive ctx conf
+      exitSuccess
+    -}
+    _ -> do
+      putText "Not yet implemented!"
+      exitFailure
