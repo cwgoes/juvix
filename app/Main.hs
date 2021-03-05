@@ -99,7 +99,7 @@ run :: Context -> Options -> IO ()
 run ctx opt = do
   feedback <- Feedback.runFeedbackT $ run' ctx opt
   case feedback of
-    Feedback.Succes msgs _ -> mapM putStrLn msgs >> exitSuccess
+    Feedback.Success msgs _ -> mapM putStrLn msgs >> exitSuccess
     Feedback.Fail msgs -> mapM putStrLn msgs >> exitFailure
   where
     run' :: Context -> Options -> Compile.Pipeline ()

@@ -7,25 +7,25 @@ import Juvix.Library
 -- The implementation is based on
 -- [[https://github.com/UU-ComputerScience/uu-cco/blob/master/uu-cco/src/CCO/Feedback.hs]].
 data Feedback msg a
-  = Succes msg a -- Indicate succes.
+  = Success msg a -- Indicate success.
   | Fail msg -- Indicate a failure.
 
 instance Functor (Feedback msg) where
-  fmap f (Succes msgs x) = Succes msgs (f x)
+  fmap f (Success msgs x) = Success msgs (f x)
   fmap _ (Fail msgs) = Fail msgs
 
 instance Monoid msg => Applicative (Feedback msg) where
-  pure x = Succes mempty x
+  pure x = Success mempty x
 
-  Succes msgs f <*> ax = case ax of
-    Succes msgs' x -> Succes (msgs <> msgs') (f x)
+  Success msgs f <*> ax = case ax of
+    Success msgs' x -> Success (msgs <> msgs') (f x)
     Fail msgs' -> Fail (msgs <> msgs')
   Fail msgs <*> _ = Fail msgs
 
 instance Monoid msg => Monad (Feedback msg) where
   return = pure
-  Succes msgs x >>= mf = case mf x of
-    Succes msgs' x' -> Succes (msgs <> msgs') x'
+  Success msgs x >>= mf = case mf x of
+    Success msgs' x' -> Success (msgs <> msgs') x'
     Fail msgs' -> Fail (msgs <> msgs')
   Fail msgs >>= _ = Fail msgs
 
@@ -51,7 +51,7 @@ instance (Monad m, Monoid msg) => Monad (FeedbackT msg m) where
   mmx >>= mmf = FeedbackT $ do
     mx <- runFeedbackT mmx
     case mx of
-      Succes msgs x -> runFeedbackT $ mmf x
+      Success msgs x -> runFeedbackT $ mmf x
       Fail msgs -> return $ Fail msgs
 
 instance Monoid msg => Trans.MonadTrans (FeedbackT msg) where
