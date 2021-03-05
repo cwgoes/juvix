@@ -3,12 +3,14 @@ module Juvix.Library.PrettyPrint
     module Text.PrettyPrint.Compact
   ) where
 
+import Text.PrettyPrint.Compact.Core
 import Text.PrettyPrint.Compact
   hiding (lparen, rparen, langle, rangle, lbrace, rbrace,
           lbracket, rbracket, squote, dquote, semi, colon,
           comma, space, dot, backslash, equals)
 import Juvix.Library hiding (show)
 import qualified Text.Show as Show
+import Prelude (String)
 
 
 -- | Annotations, which can be used for e.g. syntax highlighting
@@ -90,3 +92,27 @@ hangA ::
   (Applicative f, Monoid ann) =>
   Int -> f (Doc ann) -> f (Doc ann) -> f (Doc ann)
 hangA i = liftA2 $ hang i
+
+-- | Same as 'hangWith', but with multiple hanging elements.
+--
+-- @
+-- >>> hangsWith 2 "*" "hello" ["cool", "world"]
+-- hello*cool*world
+-- -- or --
+-- hello
+--   cool
+--   world
+-- @
+hangsWith ::
+  (Foldable t, Monoid ann) =>
+  String -> Int -> Doc ann -> t (Doc ann) -> Doc ann
+hangsWith sep n a bs =
+  groupingBy sep $ (0, a) : map (n,) (toList bs)
+
+hangs :: (Foldable t, Monoid ann) => Int -> Doc ann -> t (Doc ann) -> Doc ann
+hangs = hangsWith " "
+
+hangsA ::
+  (Applicative f, Traversable t, Monoid ann) =>
+  Int -> f (Doc ann) -> t (f (Doc ann)) -> f (Doc ann)
+hangsA i a bs = hangs i <$> a <*> sequenceA bs
