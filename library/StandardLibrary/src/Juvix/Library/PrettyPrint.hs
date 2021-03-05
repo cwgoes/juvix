@@ -96,7 +96,7 @@ hangA i = liftA2 $ hang i
 -- | Same as 'hangWith', but with multiple hanging elements.
 --
 -- @
--- >>> hangsWith 2 "*" "hello" ["cool", "world"]
+-- >>> hangsWith "*" 2 "hello" ["cool", "world"]
 -- hello*cool*world
 -- -- or --
 -- hello
