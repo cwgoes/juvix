@@ -66,9 +66,7 @@ typecheck Michelson ctx = do
     Right (FF.CoreDefs order globals) -> do
       let globalDefs = HM.mapMaybe (\case (CoreDef g) -> pure g; _ -> Nothing) globals
       case HM.elems $ HM.filter (\x -> case x of (IR.GFunction (IR.Function (_ :| ["main"]) _ _ _)) -> True; _ -> False) globalDefs of
-        [] -> do
-          liftIO $ T.putStrLn "No main function found"
-          liftIO $ exitFailure
+        [] -> Feedback.FeedbackT $ return $ Feedback.Fail ["No main function found"]
         func@(IR.GFunction (IR.Function name usage ty (IR.FunClause _ [] term _ _ _ :| []))) : [] -> do
           let newGlobals = HM.map (unsafeEvalGlobal (map convGlobal globalDefs)) globalDefs
               inlinedTerm = IR.inlineAllGlobals (IR.injectT term) (\(IR.Global n) -> HM.lookup n globalDefs)
@@ -78,16 +76,15 @@ typecheck Michelson ctx = do
               pure r
             Left err -> do
               print term
-              liftIO $ T.putStrLn (show err)
-              liftIO $ exitFailure
+              Feedback.FeedbackT $ return $ Feedback.Fail [show err]
         somethingElse -> do
-          liftIO $ print somethingElse
-          liftIO $ exitFailure
+          Feedback.FeedbackT $ return $ Feedback.Fail [show somethingElse]
     Left err -> do
-      liftIO $ print "failed at ctxToCore"
-      liftIO $ print err
-      liftIO $ exitFailure
-typecheck _ _ = liftIO exitFailure
+      Feedback.FeedbackT $ return $ Feedback.Fail ["failed at ctxToCore", show err]
+typecheck backend _ =
+  Feedback.FeedbackT $ return $
+    Feedback.Fail
+      ["Typecheck not implemented for " ++ show backend ++ " backend."]
 
 -- | Compile the given a backend and annotated terms.
 compile :: Backend -> ErasedAnn.AnnTerm Param.PrimTy Param.PrimValHR -> Pipeline OutputCode
