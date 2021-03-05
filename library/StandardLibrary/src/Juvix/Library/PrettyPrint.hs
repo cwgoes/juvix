@@ -14,18 +14,26 @@ import qualified Text.Show as Show
 -- | Annotations, which can be used for e.g. syntax highlighting
 type family Ann a :: *
 
-type Prec = Natural
+data Prec
+  -- | Outermost expression; no parens needed
+  = Outer
+  -- | Argument of infix function, with the same meaning as the argument of
+  -- 'Text.Show.showsPrec'
+  | Infix Natural
+  -- | Argument of nonfix function; all non-atomic expressions need parens
+  | FunArg
+  deriving (Eq, Ord, Show, Generic)
+
+type PrecReader = HasReader "prec" Prec
 
 -- | Class for pretty-printing syntax-like types, which need to keep track of
 -- the surrounding precedence level.
 class Monoid (Ann a) => PrettySyntax a where
   -- | Pretty-prints a syntax value, given the current precedence value in
   -- a reader environment.
-  prettyPrec' ::
-    HasReader "prec" Prec m =>
-    a -> m (Doc (Ann a))
+  prettyPrec' :: PrecReader m => a -> m (Doc (Ann a))
   default prettyPrec' ::
-    a -> m (Doc (Ann a))
+    (PrettyText a, PrecReader m) => a -> m (Doc (Ann a))
   prettyPrec' = pure . prettyText
 
 -- | Pretty-print at the given precedence level.
