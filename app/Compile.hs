@@ -64,7 +64,6 @@ parse code = do
 -- backend.
 typecheck :: Backend -> FE.FinalContext -> Pipeline (ErasedAnn.AnnTerm Param.PrimTy Param.PrimValHR)
 typecheck Michelson ctx = do
-  liftIO $ writeFile "out.out" (show ctx)
   let res = Pipeline.contextToCore ctx Param.michelson
   case res of
     Right (FF.CoreDefs order globals) -> do
