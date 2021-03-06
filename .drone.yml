@@ -10,7 +10,6 @@ environment:
   STACK_ROOT: /drone/workspace/.stack
 
 steps:
-  steps:
   - name: script-integrity-check
     image: alpine:3.7
     pull: if-not-exists
