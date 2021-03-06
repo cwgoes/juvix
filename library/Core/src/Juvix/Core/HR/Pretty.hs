@@ -40,10 +40,13 @@ type PrimPretty ty val = (PrimPretty1 ty, PrimPretty1 val)
 type Doc = PP.Doc PPAnn
 
 annotate :: PPAnn' -> Doc -> Doc
-annotate = PP.annotate . Last . Just
+annotate = PP.annotate'
 
 parens :: Doc -> Doc
-parens = annotate APunct "(" `PP.enclose` annotate APunct ")"
+parens = PP.parensA' APunct
+
+parensP :: PP.PrecReader m => PP.Prec -> m Doc -> m Doc
+parensP = PP.parensP' APunct
 
 angles :: Doc -> Doc
 angles = annotate APunct "‹" `PP.enclose` annotate APunct "›"
@@ -62,11 +65,6 @@ equals = annotate APunct "="
 
 pipe :: Doc
 pipe = annotate APunct "|"
-
-parensP :: PP.PrecReader m => PP.Prec -> m Doc -> m Doc
-parensP p d = do
-  p' <- ask @"prec"
-  if p >= p' then d else parens <$> d
 
 name :: NameSymbol.T -> Doc
 name = annotate AName . PP.string . unintern . NameSymbol.toSymbol

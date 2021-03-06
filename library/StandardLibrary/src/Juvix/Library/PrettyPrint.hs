@@ -116,3 +116,23 @@ hangsA ::
   (Applicative f, Traversable t, Monoid ann) =>
   Int -> f (Doc ann) -> t (f (Doc ann)) -> f (Doc ann)
 hangsA i a bs = hangs i <$> a <*> sequenceA bs
+
+
+parensA :: Monoid ann => ann -> Doc ann -> Doc ann
+parensA ann = annotate ann "(" `enclose` annotate ann ")"
+
+parensA' :: ann -> Doc (Last ann) -> Doc (Last ann)
+parensA' = parensA . Last . Just
+
+parensP ::
+  (Monoid ann, PrecReader m) => ann -> Prec -> m (Doc ann) -> m (Doc ann)
+parensP ann p d = do
+  p' <- ask @"prec"
+  if p >= p' then d else parensA ann <$> d
+
+parensP' ::
+  PrecReader m => ann -> Prec -> m (Doc (Last ann)) -> m (Doc (Last ann))
+parensP' = parensP . Last . Just
+
+annotate' :: ann -> Doc (Last ann) -> Doc (Last ann)
+annotate' = annotate . Last . Just
