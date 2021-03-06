@@ -1,8 +1,11 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
+{-# LANGUAGE UndecidableInstances #-}
+
 module Juvix.Core.HR.Pretty
   ( PPAnn' (..),
     PPAnn,
+    ToPPAnn (..),
     Doc,
     PrimPretty1,
     PrimPretty,
@@ -13,6 +16,7 @@ import Juvix.Core.HR.Types
 import qualified Juvix.Library.PrettyPrint as PP
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
+import qualified Juvix.Core.Parameterisations.Naturals as Nat
 
 
 -- | Annotations for syntax highlighting
@@ -21,6 +25,7 @@ data PPAnn'
   | AValCon  -- ^ builtin data: λ, (), usages, etc
   | APrimTy  -- ^ backend primitive type
   | APrimVal -- ^ backend primitive value
+  | APrimFun -- ^ backend primitive function
   | APunct   -- ^ brackets, dots, etc
   | AName    -- ^ names (TODO: distinguish bound & free?)
 
@@ -29,7 +34,7 @@ type PPAnn = Last PPAnn'
 type instance PP.Ann (Term _ _) = PPAnn
 type instance PP.Ann (Elim _ _) = PPAnn
 
-type PrimPretty1 p = (PP.PrettySyntax p, PP.Ann p ~ PPAnn)
+type PrimPretty1 p = (PP.PrettySyntax p, ToPPAnn (PP.Ann p))
 type PrimPretty ty val = (PrimPretty1 ty, PrimPretty1 val)
 
 type Doc = PP.Doc PPAnn
@@ -124,8 +129,10 @@ instance PrimPretty primTy primVal => PP.PrettySyntax (Term primTy primVal) wher
   prettyPrec' = \case
     Star i -> parensP PP.FunArg $
       pure $ annotate ATyCon $ PP.sep ["*", PP.show i]
-    PrimTy ty -> PP.prettyPrec' ty
-    Prim val -> PP.prettyPrec' val
+    PrimTy ty ->
+      annotate APrimTy . fmap toPPAnn <$> PP.prettyPrec' ty
+    Prim val ->
+      annotate APrimVal . fmap toPPAnn <$> PP.prettyPrec' val
     Pi π x s t -> ppBinders ((PI, π, x, s) : bs) body
       where (bs, body) = getBinds t
     Lam x t -> ppLams (x : xs) body
@@ -166,3 +173,19 @@ instance PrimPretty primTy primVal => PP.PrettySyntax (Elim primTy primVal) wher
         [ PP.hsepA [pure colon, ppOuter a],
           PP.hsepA [pure colon, ppOuter (Star ℓ :: Term primTy primVal)]
         ]
+
+
+class ToPPAnn ann where
+  toPPAnn :: ann -> PPAnn
+
+instance ToPPAnn () where
+  toPPAnn () = Last Nothing
+
+instance ToPPAnn PPAnn where
+  toPPAnn = identity
+
+instance ToPPAnn Nat.PPAnn where
+  toPPAnn = fmap \case
+    Nat.Lit -> APrimVal
+    Nat.Fun -> APrimFun
+    Nat.Paren -> APunct

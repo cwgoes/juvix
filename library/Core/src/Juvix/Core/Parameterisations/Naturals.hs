@@ -1,14 +1,15 @@
-{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Juvix.Core.Parameterisations.Naturals where
 
+import qualified Data.HashMap.Strict as HM
 import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.IR.Evaluator as E
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as P
 import Juvix.Library hiding ((<|>), natVal)
+import qualified Juvix.Library.PrettyPrint as PP
 import Text.ParserCombinators.Parsec
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Text.Show
@@ -126,10 +127,15 @@ natVal :: Integer -> Maybe Val
 natVal i = if i >= 0 then Just (Val (fromIntegral i)) else Nothing
 
 builtinTypes :: P.Builtins Ty
-builtinTypes = [(["Nat"], Ty)]
+builtinTypes = HM.fromList [("Nat" :| [], Ty)]
 
 builtinValues :: P.Builtins Val
-builtinValues = [(["add"], Add), (["sub"], Sub), (["mul"], Mul)]
+builtinValues =
+  HM.fromList [
+    ("add" :| [], Add),
+    ("sub" :| [], Sub),
+    ("mul" :| [], Mul)
+  ]
 
 t :: P.Parameterisation Ty Val
 t =
@@ -148,3 +154,30 @@ t =
       floatTy = \_ _ -> False,
       floatVal = const Nothing
     }
+
+type instance PP.Ann Ty = ()
+
+instance PP.PrettySyntax Ty where prettyPrec' Ty = pure "Nat"
+
+
+data PPAnn' = Lit | Fun | Paren deriving (Eq, Ord, Show)
+type PPAnn = Last PPAnn'
+
+type Doc = PP.Doc PPAnn
+
+type instance PP.Ann Val = PPAnn
+
+nat :: Natural -> Doc
+nat = PP.annotate' Lit . PP.show
+
+instance PP.PrettySyntax Val where
+  prettyPrec' = \case
+    Val k -> pure $ nat k
+    Add -> pure $ PP.annotate' Fun "add"
+    Sub -> pure $ PP.annotate' Fun "sub"
+    Mul -> pure $ PP.annotate' Fun "mul"
+    Curried f k -> PP.parensP' Paren PP.FunArg $
+      PP.hsepA [
+        PP.withPrec PP.FunArg $ PP.prettyPrec' f,
+        pure $ nat k
+      ]
