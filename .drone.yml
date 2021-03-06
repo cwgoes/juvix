@@ -11,7 +11,7 @@ environment:
 
 steps:
   steps:
-  - name: Check script integrity
+  - name: script-integrity-check
     image: alpine:3.7
     pull: if-not-exists
     commands:
@@ -38,6 +38,8 @@ steps:
     volumes:
       - name: cache
         path: /tmp/cache
+    depends_on:
+      - script-integrity-check
 
   - name: test-suite
     image: cryptiumlabs/juvix-ci-2
