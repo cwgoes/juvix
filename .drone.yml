@@ -1,3 +1,4 @@
+---
 kind: pipeline
 type: docker
 name: juvix-ci-build-push
@@ -9,6 +10,13 @@ environment:
   STACK_ROOT: /drone/workspace/.stack
 
 steps:
+  steps:
+  - name: Check script integrity
+    image: alpine
+    commands:
+      - echo "db8b594e21d4d8435e501e2deae3abf48c9cc50984699d08d090ac32431778e9"  scripts/check-formatting.sh | sha256sum -c -
+      - echo "77c3d7c16059aa670f37b4621ecaa2667abfbfb64103f1c5451d64e362b9c54b"  scripts/check-org-gen.sh | sha256sum -c -
+
   - name: restore-cache
     image: meltwater/drone-cache
     settings:
@@ -235,3 +243,8 @@ volumes:
 trigger:
   event:
     - pull_request
+---
+kind: signature
+hmac: e5335b9faec855561d6d041708a9dc7c36eca0209a035b9242cabbfb65dd6b1f
+
+...
