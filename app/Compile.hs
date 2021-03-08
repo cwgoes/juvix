@@ -35,9 +35,9 @@ type Code = Text
 
 type OutputCode = Text
 
-type Message = [P.String]
+type Message = P.String
 
-type Pipeline = Feedback.FeedbackT Message IO
+type Pipeline = Feedback.FeedbackT [] Message IO
 
 -- | Function that parses code gives as input.
 parse :: Code -> Pipeline FE.FinalContext

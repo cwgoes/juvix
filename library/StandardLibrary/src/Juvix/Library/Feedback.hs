@@ -6,15 +6,15 @@ import Juvix.Library
 -- | Keep track of messages during the compilation or REPL.
 -- The implementation is based on
 -- [[https://github.com/UU-ComputerScience/uu-cco/blob/master/uu-cco/src/CCO/Feedback.hs]].
-data Feedback msg a
-  = Success msg a -- Indicate success.
-  | Fail msg -- Indicate a failure.
+data Feedback (app :: * -> *) msg a
+  = Success (app msg) a -- Indicate success.
+  | Fail (app msg) -- Indicate a failure.
 
-instance Functor (Feedback msg) where
+instance Functor (Feedback app msg) where
   fmap f (Success msgs x) = Success msgs (f x)
   fmap _ (Fail msgs) = Fail msgs
 
-instance Monoid msg => Applicative (Feedback msg) where
+instance Monoid (app msg) => Applicative (Feedback app msg) where
   pure x = Success mempty x
 
   Success msgs f <*> ax = case ax of
@@ -22,7 +22,7 @@ instance Monoid msg => Applicative (Feedback msg) where
     Fail msgs' -> Fail (msgs <> msgs')
   Fail msgs <*> _ = Fail msgs
 
-instance Monoid msg => Monad (Feedback msg) where
+instance Monoid (app msg) => Monad (Feedback app msg) where
   return = pure
   Success msgs x >>= mf = case mf x of
     Success msgs' x' -> Success (msgs <> msgs') x'
@@ -30,14 +30,14 @@ instance Monoid msg => Monad (Feedback msg) where
   Fail msgs >>= _ = Fail msgs
 
 -- | Monad transformer of Feedback.
-data FeedbackT msg m a = FeedbackT {runFeedbackT :: m (Feedback msg a)}
+data FeedbackT app msg m a = FeedbackT {runFeedbackT :: m (Feedback app msg a)}
 
-instance Monad m => Functor (FeedbackT msg m) where
+instance Monad m => Functor (FeedbackT app msg m) where
   fmap f mx = FeedbackT $ do
     x <- runFeedbackT mx
     return $ fmap f x
 
-instance (Monad m, Monoid msg) => Applicative (FeedbackT msg m) where
+instance (Monad m, Monoid (app msg)) => Applicative (FeedbackT app msg m) where
   pure = FeedbackT . pure . pure
 
   aaf <*> aax = FeedbackT $ do
@@ -45,7 +45,7 @@ instance (Monad m, Monoid msg) => Applicative (FeedbackT msg m) where
     ax <- runFeedbackT aax
     return $ af <*> ax
 
-instance (Monad m, Monoid msg) => Monad (FeedbackT msg m) where
+instance (Monad m, Monoid (app msg)) => Monad (FeedbackT app msg m) where
   return = pure
 
   mmx >>= mmf = FeedbackT $ do
@@ -54,8 +54,8 @@ instance (Monad m, Monoid msg) => Monad (FeedbackT msg m) where
       Success msgs x -> runFeedbackT $ mmf x
       Fail msgs -> return $ Fail msgs
 
-instance Monoid msg => Trans.MonadTrans (FeedbackT msg) where
+instance Monoid (app msg) => Trans.MonadTrans (FeedbackT app msg) where
   lift mx = FeedbackT $ mx >>= return . return
 
-instance (MonadIO m, Monoid msg) => MonadIO (FeedbackT msg m) where
+instance (MonadIO m, Monoid (app msg)) => MonadIO (FeedbackT app msg m) where
   liftIO = lift . liftIO
