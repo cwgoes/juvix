@@ -1,6 +1,8 @@
 module Juvix.Library.Feedback
   ( Feedback (..),
     FeedbackT (..),
+    feedback,
+    feedbackT,
     Fail.fail,
   )
 where
@@ -89,3 +91,11 @@ instance
   Fail.MonadFail (FeedbackT app msg m)
   where
   fail = FeedbackT . return . Fail.fail
+
+-- | Provide feedback without failure.
+feedback :: Applicative app => msg -> Feedback app msg ()
+feedback msg = Success (pure msg) ()
+
+-- | Provide feedback without failure for monad transformers.
+feedbackT :: (Monad m, Applicative app) => msg -> FeedbackT app msg m ()
+feedbackT = FeedbackT . return . feedback
