@@ -67,7 +67,11 @@ instance (Monad m, Monoid (app msg)) => Monad (FeedbackT app msg m) where
   mmx >>= mmf = FeedbackT $ do
     mx <- runFeedbackT mmx
     case mx of
-      Success msgs x -> runFeedbackT $ mmf x
+      Success msgs x -> do
+        mf <- runFeedbackT $ mmf x
+        case mf of
+          Success msgs' x' -> return $ Success (msgs <> msgs') x'
+          Fail msgs' -> return $ Fail (msgs <> msgs')
       Fail msgs -> return $ Fail msgs
 
 instance Monoid (app msg) => Trans.MonadTrans (FeedbackT app msg) where
