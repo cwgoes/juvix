@@ -45,7 +45,7 @@ parse code = do
   core <- liftIO $ toCore_wrap code
   case core of
     Right ctx -> return ctx
-    Left err -> Feedback.FeedbackT $ return $ Feedback.Fail [show err]
+    Left err -> Feedback.fail $ show err
   where
     toCore_wrap :: Code -> IO (Either Pipeline.Error FE.FinalContext)
     toCore_wrap code = do
@@ -66,7 +66,7 @@ typecheck Michelson ctx = do
     Right (FF.CoreDefs order globals) -> do
       let globalDefs = HM.mapMaybe (\case (CoreDef g) -> pure g; _ -> Nothing) globals
       case HM.elems $ HM.filter (\x -> case x of (IR.GFunction (IR.Function (_ :| ["main"]) _ _ _)) -> True; _ -> False) globalDefs of
-        [] -> Feedback.FeedbackT $ return $ Feedback.Fail ["No main function found"]
+        [] -> Feedback.fail "No main function found"
         func@(IR.GFunction (IR.Function name usage ty (IR.FunClause _ [] term _ _ _ :| []))) : [] -> do
           let newGlobals = HM.map (unsafeEvalGlobal (map convGlobal globalDefs)) globalDefs
               inlinedTerm = IR.inlineAllGlobals (IR.injectT term) (\(IR.Global n) -> HM.lookup n globalDefs)
@@ -76,15 +76,13 @@ typecheck Michelson ctx = do
               pure r
             Left err -> do
               print term
-              Feedback.FeedbackT $ return $ Feedback.Fail [show err]
+              Feedback.fail $ show err
         somethingElse -> do
-          Feedback.FeedbackT $ return $ Feedback.Fail [show somethingElse]
+          Feedback.fail $ show somethingElse
     Left err -> do
-      Feedback.FeedbackT $ return $ Feedback.Fail ["failed at ctxToCore", show err]
+      Feedback.fail $ "failed at ctxToCore\n" ++ show err
 typecheck backend _ =
-  Feedback.FeedbackT $ return $
-    Feedback.Fail
-      ["Typecheck not implemented for " ++ show backend ++ " backend."]
+  Feedback.fail $ "Typecheck not implemented for " ++ show backend ++ " backend."
 
 -- | Compile the given a backend and annotated terms.
 compile :: Backend -> ErasedAnn.AnnTerm Param.PrimTy Param.PrimValHR -> Pipeline OutputCode
@@ -94,7 +92,7 @@ compile backend term = do
   case res of
     Right c -> do
       return $ M.untypedContractToSource (fst c)
-    Left err -> Feedback.FeedbackT $ return $ Feedback.Fail [show err]
+    Left err -> Feedback.fail $ show err
 
 -- | Write the output code to a given file.
 writeout :: FilePath -> OutputCode -> Pipeline ()
