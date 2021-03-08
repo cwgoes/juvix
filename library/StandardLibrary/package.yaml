@@ -37,6 +37,7 @@ default-extensions:
   - LambdaCase
   - TypeSynonymInstances
   - FlexibleInstances
+  - KindSignatures
 
 ghc-options:
   - -ferror-spans
