@@ -1,6 +1,8 @@
 module Juvix.Library.Feedback where
 
+import qualified Control.Monad.Fail as Fail
 import qualified Control.Monad.Trans as Trans
+import qualified Data.String as String
 import Juvix.Library
 
 -- | Keep track of messages during the compilation or REPL.
@@ -28,6 +30,15 @@ instance Monoid (app msg) => Monad (Feedback app msg) where
     Success msgs' x' -> Success (msgs <> msgs') x'
     Fail msgs' -> Fail (msgs <> msgs')
   Fail msgs >>= _ = Fail msgs
+
+instance
+  ( Applicative app,
+    Monoid (app msg),
+    String.IsString msg
+  ) =>
+  Fail.MonadFail (Feedback app msg)
+  where
+  fail = Fail . pure . String.fromString
 
 -- | Monad transformer of Feedback.
 data FeedbackT app msg m a = FeedbackT {runFeedbackT :: m (Feedback app msg a)}
@@ -59,3 +70,13 @@ instance Monoid (app msg) => Trans.MonadTrans (FeedbackT app msg) where
 
 instance (MonadIO m, Monoid (app msg)) => MonadIO (FeedbackT app msg m) where
   liftIO = lift . liftIO
+
+instance
+  ( Monad m,
+    Applicative app,
+    Monoid (app msg),
+    String.IsString msg
+  ) =>
+  Fail.MonadFail (FeedbackT app msg m)
+  where
+  fail = FeedbackT . return . Fail.fail
