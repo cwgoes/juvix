@@ -1,4 +1,9 @@
-module Juvix.Library.Feedback where
+module Juvix.Library.Feedback
+  ( Feedback (..),
+    FeedbackT (..),
+    Fail.fail,
+  )
+where
 
 import qualified Control.Monad.Fail as Fail
 import qualified Control.Monad.Trans as Trans
