@@ -128,7 +128,7 @@ parensP ::
   (Monoid ann, PrecReader m) => ann -> Prec -> m (Doc ann) -> m (Doc ann)
 parensP ann p d = do
   p' <- ask @"prec"
-  if p >= p' then d else parensA ann <$> d
+  if p > p' then d else parensA ann <$> d
 
 parensP' ::
   PrecReader m => ann -> Prec -> m (Doc (Last ann)) -> m (Doc (Last ann))
