@@ -10,6 +10,13 @@ environment:
   STACK_ROOT: /drone/workspace/.stack
 
 steps:
+  - name: script-integrity-check
+    image: alpine:3.7
+    pull: if-not-exists
+    commands:
+      - echo "db8b594e21d4d8435e501e2deae3abf48c9cc50984699d08d090ac32431778e9  scripts/check-formatting.sh" | sha256sum -c -
+      - echo "77c3d7c16059aa670f37b4621ecaa2667abfbfb64103f1c5451d64e362b9c54b  scripts/check-org-gen.sh" | sha256sum -c -
+
   - name: restore-cache
     image: meltwater/drone-cache
     settings:
@@ -30,6 +37,8 @@ steps:
     volumes:
       - name: cache
         path: /tmp/cache
+    depends_on:
+      - script-integrity-check
 
   - name: test-suite
     image: cryptiumlabs/juvix-ci-2
@@ -118,6 +127,6 @@ trigger:
     - pull_request
 ---
 kind: signature
-hmac: 63397215ba4a17931b2e6a8073da394a8e2e4835156974f9634457cfaed47528
+hmac: 62267f8581b6830b36ec2804a59d42fc1dafb86cb26e9c8b9468df36b2d316c0
 
 ...
