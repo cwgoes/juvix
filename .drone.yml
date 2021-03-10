@@ -16,7 +16,6 @@ steps:
     commands:
       - echo "db8b594e21d4d8435e501e2deae3abf48c9cc50984699d08d090ac32431778e9  scripts/check-formatting.sh" | sha256sum -c -
       - echo "77c3d7c16059aa670f37b4621ecaa2667abfbfb64103f1c5451d64e362b9c54b  scripts/check-org-gen.sh" | sha256sum -c -
-
   - name: restore-cache
     image: meltwater/drone-cache
     settings:
@@ -127,6 +126,6 @@ trigger:
     - pull_request
 ---
 kind: signature
-hmac: 62267f8581b6830b36ec2804a59d42fc1dafb86cb26e9c8b9468df36b2d316c0
+hmac: 71374f7af34894d11a456d81e106d4fecd14ab159b0b8980f908b6652fcc7762
 
 ...
