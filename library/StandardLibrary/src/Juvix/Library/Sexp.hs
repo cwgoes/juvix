@@ -41,14 +41,15 @@ import Prelude (error)
 --    is in scope for doing certain changes.
 --
 -- For arguments, this function takes a Sexp, along with 2 sets of
--- pred function pairs. The function for the binding we take the rest
--- of the computation, as we wish to only make the changes locally,
--- much like a lexical binding/closure.
+-- pred function pairs. The function for the binding we take a
+-- continuation, as it's not easy to automate the recursive calls in
+-- instances such as case, so we have to do it by hand for those
+-- binder cases
 foldSearchPred ::
   Monad f =>
   T ->
   (NameSymbol.T -> Bool, Atom -> T -> f T) ->
-  (NameSymbol.T -> Bool, Atom -> T -> f T -> f T) ->
+  (NameSymbol.T -> Bool, Atom -> T -> (T -> f T) -> f T) ->
   f T
 foldSearchPred t p1@(predChange, f) p2@(predBind, g) =
   case t of
@@ -63,8 +64,7 @@ foldSearchPred t p1@(predChange, f) p2@(predBind, g) =
       | predBind name -> do
         -- G takes the computation, as its changes are scoped over the
         -- calls.
-        g atom xs $ do
-          Cons a <$> foldSearchPred xs p1 p2
+        Cons a <$> g atom xs (\xs -> foldSearchPred xs p1 p2)
     Cons cs xs ->
       Cons <$> foldSearchPred cs p1 p2 <*> foldSearchPred xs p1 p2
     Nil -> pure Nil

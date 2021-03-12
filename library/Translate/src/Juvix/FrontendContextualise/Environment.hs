@@ -5,9 +5,10 @@ import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.Core.Common.Open as Open
 import Juvix.Library
-import Juvix.Library.HashMap as Map
+import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Sexp as Sexp
+import Prelude (error)
 
 type HasNew t ty s m = HasState "new" (Context.T t ty s) m
 
@@ -193,6 +194,8 @@ newtype Closure'
   = Closure (Map.T Symbol Information)
   deriving (Show, Eq)
 
+type HasClosure m = HasReader "closure" Closure' m
+
 addToClosure :: Symbol -> Information -> Closure' -> Closure'
 addToClosure k info (Closure m) =
   Closure $ Map.insert k info m
@@ -217,7 +220,62 @@ bindingForms :: (Eq a, IsString a) => a -> Bool
 bindingForms x =
   x `elem` ["type", ":open-in", ":let-type", ":let-match", "case", ":lambda-case", "declaim"]
 
-searchAndClosure a as op
-  | named "case" = undefined
+searchAndClosure ::
+  HasClosure f => Sexp.Atom -> Sexp.T -> (Sexp.T -> f Sexp.T) -> f Sexp.T
+searchAndClosure a as cont
+  | named "case" = case' as cont
+  | named ":lambda-case" = undefined
   where
     named = Sexp.isAtomNamed (Sexp.Atom a)
+
+case' :: HasClosure f => Sexp.T -> (Sexp.T -> f Sexp.T) -> f Sexp.T
+case' (t Sexp.:> binds) cont = do
+  op <- cont t
+  binding <- mapF (`match` cont) binds
+  pure (Sexp.Cons op binding)
+case' _ _ = error "malformed case"
+
+match :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
+match (Sexp.List [path, body]) cont =
+  local @"closure" (\cnt -> foldr genericBind cnt grabBindings) $ do
+    newB <- cont body
+    pure (Sexp.list [path, newB])
+  where
+    grabBindings = nameStarSingle path
+match _ _ = error "malformed match"
+
+-- | @nameStarSingle@ like @nameStar@ but we are matching on a single
+-- element
+nameStarSingle :: Sexp.T -> [Symbol]
+nameStarSingle = nameStar . (\x -> Sexp.list [x])
+
+-- | @nameStar@ grabs names recursively
+nameStar :: Sexp.T -> [Symbol]
+nameStar ((_caar Sexp.:> cadr) Sexp.:> cdr) =
+  -- we ignore the _caar as it's a cosntructor!
+  nameStar cadr <> nameStar cdr
+nameStar (x Sexp.:> xs)
+  | Just symb <- eleToSymbol x =
+    symb : nameStar xs
+  | otherwise =
+    -- the car is not a cons or an atom, thus a number, we should
+    -- ignore it
+    nameStar xs
+nameStar Sexp.Atom {} = []
+nameStar Sexp.Nil = []
+
+------------------------------------------------------------
+-- Move to Sexp library
+------------------------------------------------------------
+
+mapF :: Applicative f => (Sexp.T -> f Sexp.T) -> Sexp.T -> f Sexp.T
+mapF f (x Sexp.:> xs) =
+  Sexp.Cons <$> f x <*> mapF f xs
+mapF _ Sexp.Nil = pure Sexp.Nil
+mapF _ a = pure a
+
+eleToSymbol :: Sexp.T -> Maybe Symbol
+eleToSymbol x
+  | Just Sexp.A {atomName} <- Sexp.atomFromT x =
+    Just (NameSymbol.toSymbol atomName)
+  | otherwise = Nothing
