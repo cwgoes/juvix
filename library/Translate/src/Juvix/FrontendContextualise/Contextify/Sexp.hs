@@ -216,9 +216,18 @@ decideRecordOrDef xs@(Sexp.List [Sexp.List [Sexp.Nil, body]]) recordName currMod
         f x _ = pure x
     _ -> def
   where
-    def = pure (Context.Def (Context.D Nothing ty xs pres), [])
+    def =
+      pure
+        ( Context.Def
+            (Context.D Nothing ty (Sexp.atom ":lambda-case" Sexp.:> xs) pres),
+          []
+        )
 decideRecordOrDef xs _ _ pres ty =
-  pure (Context.Def (Context.D Nothing ty xs pres), [])
+  pure
+    ( Context.Def
+        (Context.D Nothing ty (Sexp.atom ":lambda-case" Sexp.:> xs) pres),
+      []
+    )
 
 collectConstructors :: Sexp.T -> [Symbol]
 collectConstructors dat

@@ -1594,7 +1594,9 @@ done with no extra information needed. Thus we export the following passes
   + [[NameSpace]]
   + [[Common/Open]]
   + [[Library]]
+  + [[HashMap]]
   + [[NameSymbol]]
+  + [[Library/Sexp]]
 ***** Contextify
 ****** ResolveOpenInfo
 - This module is responsible for adding the reverse open

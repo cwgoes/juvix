@@ -5,7 +5,9 @@ import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
 import qualified Juvix.Core.Common.Open as Open
 import Juvix.Library
+import Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Sexp as Sexp
 
 type HasNew t ty s m = HasState "new" (Context.T t ty s) m
 
@@ -168,3 +170,54 @@ setupFill sym cWorks cDoesntWork = do
       let Just cNowWorks = Context.inNameSpace sym cInserted
        in pure $ Right (cWorks, cNowWorks)
     Left err -> pure $ Left err
+
+----------------------------------------------------------------------
+-- Sexp Helpers Code Above this Will likely be deleted
+----------------------------------------------------------------------
+
+-- TODO ∷ make this a standard data structure
+
+-- Currently we don't really use the signature however in the future
+-- the mSig will be used to detect the types of modules we will have
+-- open and any other information we wish to track here!?
+data Information
+  = Info
+      { -- | @mSig@ represents the type of the term in the closure
+        mSig :: Maybe Sexp.T,
+        -- | @info@ represents all the information we have on the term
+        info :: [Context.Information]
+      }
+  deriving (Show, Eq)
+
+newtype Closure'
+  = Closure (Map.T Symbol Information)
+  deriving (Show, Eq)
+
+addToClosure :: Symbol -> Information -> Closure' -> Closure'
+addToClosure k info (Closure m) =
+  Closure $ Map.insert k info m
+
+genericBind :: Symbol -> Closure' -> Closure'
+genericBind name (Closure m) =
+  Closure $ Map.insert name (Info Nothing []) m
+
+passContext ctx f g h =
+  Context.mapWithContext
+    ctx
+    Context.CtxForm
+      { sumF = f,
+        termF = g,
+        tyF = h
+      }
+  where
+    pass =
+      undefined
+
+bindingForms :: (Eq a, IsString a) => a -> Bool
+bindingForms x =
+  x `elem` ["type", ":open-in", ":let-type", ":let-match", "case", ":lambda-case", "declaim"]
+
+searchAndClosure a as op
+  | named "case" = undefined
+  where
+    named = Sexp.isAtomNamed (Sexp.Atom a)
