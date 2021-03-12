@@ -45,6 +45,9 @@ import Prelude (error)
 --    lexical semantics are respected, and then we can cleanup after
 --    this.
 --
+-- 4. If the @predChange@ function accepts ":atom", then the function
+--    will also be ran on the atom
+--
 -- For arguments, this function takes a Sexp, along with 2 sets of
 -- pred function pairs. The function for the binding we take a
 -- continuation, as it's not easy to automate the recursive calls in
@@ -81,7 +84,9 @@ foldSearchPred t p1@(predChange, f) p2@(predBind, g) =
     Cons cs xs ->
       Cons <$> foldSearchPred cs p1 p2 <*> foldSearchPred xs p1 p2
     Nil -> pure Nil
-    Atom a -> pure $ Atom a
+    Atom a
+      | predChange ":atom" -> f a t
+      | otherwise -> pure $ Atom a
 
 foldPred :: T -> (NameSymbol.T -> Bool) -> (Atom -> T -> T) -> T
 foldPred t pred f =
