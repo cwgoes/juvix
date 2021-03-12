@@ -101,7 +101,7 @@ defunTransfomrationWorks =
     Right desugared =
       extract "sig foo : int -> int let foo 1 = 1 let foo n = n * foo (pred n)"
     Right function =
-      Sexp.parse "(((1) 1) ((n) (:infix * n (foo (:paren (pred n))))))"
+      Sexp.parse "(:lambda-case ((1) 1) ((n) (:infix * n (foo (:paren (pred n))))))"
     Right sig =
       Sexp.parse "(:infix -> int int)"
 
