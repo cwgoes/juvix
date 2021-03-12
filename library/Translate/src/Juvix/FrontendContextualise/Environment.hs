@@ -244,6 +244,14 @@ searchAndClosure ctx a as cont
   where
     named = Sexp.isAtomNamed (Sexp.Atom a)
 
+------------------------------------------------------------
+-- searchAndClosure function dispatch table
+------------------------------------------------------------
+
+-- | @openIn@ opens @mod@, adding the contents to the closure of
+-- @body@. Note that we first =resolve= what mod is by calling the
+-- continuation, @cont@, in case any transformations want to change
+-- what the @mod@ is.
 openIn ::
   (ErrS f, HasClosure f) => SexpContext -> Sexp.T -> (Sexp.T -> f Sexp.T) -> f Sexp.T
 openIn ctx (Sexp.List [mod, body]) cont = do
@@ -268,11 +276,18 @@ openIn ctx (Sexp.List [mod, body]) cont = do
           throw @"error" (CantResolve [newMod])
     _ ->
       throw @"error" (CantResolve [newMod])
+openIn _ _ _ = error "malformed open-in"
 
+-- | @lambdaCase@ we encounter a @:lambda-case@ at the start of every
+-- Definition in the context. This ensures the arguments are properly
+-- bound for the inner computation.
 lambdaCase :: HasClosure f => Sexp.T -> (Sexp.T -> f Sexp.T) -> f Sexp.T
 lambdaCase binds cont =
   mapF (`matchMany` cont) binds
 
+-- | @case'@ is similar to @lambdaCase@ except that it has a term it's
+-- matching on that it must first change without having an extra
+-- binders around it
 case' :: HasClosure f => Sexp.T -> (Sexp.T -> f Sexp.T) -> f Sexp.T
 case' (t Sexp.:> binds) cont = do
   op <- cont t
@@ -280,12 +295,24 @@ case' (t Sexp.:> binds) cont = do
   pure (Sexp.Cons op binding)
 case' _ _ = error "malformed case"
 
+------------------------------------------------------------
+-- Helpers for the various Search and Closure dispatch
+------------------------------------------------------------
+
+-- | @matchMany@ deals with a @((binding-1 … binding-n) body) term, and
+-- proper continues the transformation on the body, and the bindings
+-- after making sure to register that they are indeed bound termxs
 matchMany :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
 matchMany = matchGen nameStar
 
+-- | @match@ deals with a @(bindings body)@ term coming down, see
+-- @matchMany@ for more details
 match :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
 match = matchGen nameStarSingle
 
+-- | @matchGen@ is a generic/general version of match and matchMany as
+-- the form that comes in may be a list of binders or a single term
+-- being bound.
 matchGen ::
   (HasClosure m, Foldable t) =>
   (Sexp.T -> t Symbol) ->
