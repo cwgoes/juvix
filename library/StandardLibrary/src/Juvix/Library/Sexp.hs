@@ -40,6 +40,11 @@ import Prelude (error)
 --    forms can cause binders. This is useful when we care about what
 --    is in scope for doing certain changes.
 --
+-- 3. In the case where both predicates match, then we will run the
+--    binder and then the actual transformation, this is to ensure the
+--    lexical semantics are respected, and then we can cleanup after
+--    this.
+--
 -- For arguments, this function takes a Sexp, along with 2 sets of
 -- pred function pairs. The function for the binding we take a
 -- continuation, as it's not easy to automate the recursive calls in
@@ -54,17 +59,25 @@ foldSearchPred ::
 foldSearchPred t p1@(predChange, f) p2@(predBind, g) =
   case t of
     Cons a@(Atom atom@(A name _)) xs
-      | predChange name -> do
-        newCons <- f atom xs
-        case newCons of
-          Cons _ _ ->
-            Cons (car newCons) <$> foldSearchPred (cdr newCons) p1 p2
-          _ ->
-            pure newCons
-      | predBind name -> do
+      -- this case is a bit special as we wish to remove the form but
+      -- it's a binder! So we must run it then run the transform on it!
+      | predBind name && predChange name -> do
+        bindedTerm <- bindCase
+        changeCase (cdr bindedTerm)
+      | predChange name -> changeCase xs
+      | predBind name -> bindCase
+      where
+        changeCase xs = do
+          newCons <- f atom xs
+          case newCons of
+            Cons _ _ ->
+              Cons (car newCons) <$> foldSearchPred (cdr newCons) p1 p2
+            _ ->
+              pure newCons
         -- G takes the computation, as its changes are scoped over the
         -- calls.
-        Cons a <$> g atom xs (\xs -> foldSearchPred xs p1 p2)
+        bindCase =
+          Cons a <$> g atom xs (\xs -> foldSearchPred xs p1 p2)
     Cons cs xs ->
       Cons <$> foldSearchPred cs p1 p2 <*> foldSearchPred xs p1 p2
     Nil -> pure Nil

@@ -186,7 +186,10 @@ data Information
       { -- | @mSig@ represents the type of the term in the closure
         mSig :: Maybe Sexp.T,
         -- | @info@ represents all the information we have on the term
-        info :: [Context.Information]
+        info :: [Context.Information],
+        -- | @mOpen@ represents a place where the term may have come
+        -- from
+        mOpen :: Maybe NameSymbol.T
       }
   deriving (Show, Eq)
 
@@ -194,7 +197,15 @@ newtype Closure'
   = Closure (Map.T Symbol Information)
   deriving (Show, Eq)
 
+data ErrorS = CantResolve [Sexp.T]
+
+type SexpContext = Context.T Sexp.T Sexp.T Sexp.T
+
 type HasClosure m = HasReader "closure" Closure' m
+
+type ContextS m = HasState "context" SexpContext m
+
+type ErrS m = HasThrow "error" ErrorS m
 
 addToClosure :: Symbol -> Information -> Closure' -> Closure'
 addToClosure k info (Closure m) =
@@ -202,7 +213,7 @@ addToClosure k info (Closure m) =
 
 genericBind :: Symbol -> Closure' -> Closure'
 genericBind name (Closure m) =
-  Closure $ Map.insert name (Info Nothing []) m
+  Closure $ Map.insert name (Info Nothing [] Nothing) m
 
 passContext ctx f g h =
   Context.mapWithContext
@@ -218,15 +229,49 @@ passContext ctx f g h =
 
 bindingForms :: (Eq a, IsString a) => a -> Bool
 bindingForms x =
-  x `elem` ["type", ":open-in", ":let-type", ":let-match", "case", ":lambda-case", "declaim"]
+  x `elem` ["type", ":open-in", ":let-type", ":let-match", "case", ":lambda-case", ":declaim"]
 
 searchAndClosure ::
-  HasClosure f => Sexp.Atom -> Sexp.T -> (Sexp.T -> f Sexp.T) -> f Sexp.T
-searchAndClosure a as cont
+  (HasClosure f, ErrS f) => SexpContext -> Sexp.Atom -> Sexp.T -> (Sexp.T -> f Sexp.T) -> f Sexp.T
+searchAndClosure ctx a as cont
   | named "case" = case' as cont
-  | named ":lambda-case" = undefined
+  -- this case happens at the start of every defun
+  | named ":lambda-case" = lambdaCase as cont
+  -- This case is a bit special, as we must check the context for
+  -- various names this may introduce to the
+  | named ":open-in" = openIn ctx as cont
+  | named ":declaim" = undefined
   where
     named = Sexp.isAtomNamed (Sexp.Atom a)
+
+openIn ::
+  (ErrS f, HasClosure f) => SexpContext -> Sexp.T -> (Sexp.T -> f Sexp.T) -> f Sexp.T
+openIn ctx (Sexp.List [mod, body]) cont = do
+  -- Fully run what we need to on mod
+  newMod <- cont mod
+  -- Now let us open up the box
+  case Sexp.atomFromT newMod of
+    Just Sexp.A {atomName} ->
+      case ctx Context.!? atomName >>| Context.extractValue of
+        Just (Context.Record record) ->
+          let NameSpace.List {publicL} = NameSpace.toList (record ^. Context.contents)
+              --
+              newSymbs = fst <$> publicL
+              --
+              addSymbolInfo symbol =
+                addToClosure symbol (Info Nothing [] (Just atomName))
+           in --
+              local @"closure" (\cnt -> foldr addSymbolInfo cnt newSymbs) do
+                newBody <- cont body
+                pure $ Sexp.list [newMod, newBody]
+        _ ->
+          throw @"error" (CantResolve [newMod])
+    _ ->
+      throw @"error" (CantResolve [newMod])
+
+lambdaCase :: HasClosure f => Sexp.T -> (Sexp.T -> f Sexp.T) -> f Sexp.T
+lambdaCase binds cont =
+  mapF (`matchMany` cont) binds
 
 case' :: HasClosure f => Sexp.T -> (Sexp.T -> f Sexp.T) -> f Sexp.T
 case' (t Sexp.:> binds) cont = do
@@ -235,14 +280,32 @@ case' (t Sexp.:> binds) cont = do
   pure (Sexp.Cons op binding)
 case' _ _ = error "malformed case"
 
+matchMany :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
+matchMany = matchGen nameStar
+
 match :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
-match (Sexp.List [path, body]) cont =
+match = matchGen nameStarSingle
+
+matchGen ::
+  (HasClosure m, Foldable t) =>
+  (Sexp.T -> t Symbol) ->
+  Sexp.T ->
+  (Sexp.T -> m Sexp.T) ->
+  m Sexp.T
+matchGen nameStarFunc (Sexp.List [path, body]) cont =
+  -- Important we must do this first!
   local @"closure" (\cnt -> foldr genericBind cnt grabBindings) $ do
+    -- THIS MUST happen in the local, as we don't want to have a pas
+    -- confuse the variables here as something else... imagine if we
+    -- are doing a pass which resolves symbols, then we'd try to
+    -- resolve the variables we bind. However for constructors and what
+    -- not they need to be ran through this pass
+    newPath <- cont path
     newB <- cont body
-    pure (Sexp.list [path, newB])
+    pure (Sexp.list [newPath, newB])
   where
-    grabBindings = nameStarSingle path
-match _ _ = error "malformed match"
+    grabBindings = nameStarFunc path
+matchGen _ _ _ = error "malformed match"
 
 -- | @nameStarSingle@ like @nameStar@ but we are matching on a single
 -- element
