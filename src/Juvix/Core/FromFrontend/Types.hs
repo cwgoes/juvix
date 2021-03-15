@@ -163,7 +163,7 @@ instance (Show primTy, Show primVal) => Show (Error primTy primVal) where
       "Type of datatype " <> show x <> " is\n"
         <> show ty
         <> "\n"
-        <> "which is not a valid sort"
+        <> "which is not a valid sort" -- TODO rephrase this
     UnknownBuiltin x ->
       "Unknown builtin " <> show x
     BuiltinWithUsage def ->
@@ -181,9 +181,11 @@ instance (Show primTy, Show primVal) => Show (Error primTy primVal) where
 data CoreSig' ext primTy primVal
   = DataSig
       { dataType :: !(IR.Term' ext primTy primVal),
-        -- | if declared as @type T a b = ...@, then the @T a b@ part
-        -- (needed for ml-style constructors)
-        dataHead :: !(Maybe (IR.Term' ext primTy primVal))
+        dataCons :: [NameSymbol.T]
+      }
+  | ConSig
+      { conType :: !(Maybe (IR.Term' ext primTy primVal)),
+        conDef :: !(Maybe (FE.Final' Ctx.Def))
       }
   | ValSig
       { valUsage :: !IR.GlobalUsage,
@@ -191,6 +193,17 @@ data CoreSig' ext primTy primVal
       }
   | SpecialSig !Special
   deriving (Generic)
+
+-- | If two signatures can be merged (currently, only constructor signatures),
+-- then do so, otherwise return the *first* unchanged
+-- (since @insertWith@ calls it as @mergeSigs new old@).
+mergeSigs ::
+  CoreSig' ext primTy primVal ->
+  CoreSig' ext primTy primVal ->
+  CoreSig' ext primTy primVal
+mergeSigs (ConSig newTy newDef) (ConSig oldTy oldDef) =
+  ConSig (newTy <|> oldTy) (newDef <|> oldDef)
+mergeSigs _ second = second
 
 -- | Bindings that can't be given types, but can be given new names by the user.
 data Special
@@ -270,8 +283,7 @@ data FFState primTy primVal
 type EnvAlias primTy primVal =
   ExceptT (Error primTy primVal) (State (FFState primTy primVal))
 
-newtype Env primTy primVal a
-  = Env {unEnv :: EnvAlias primTy primVal a}
+newtype Env primTy primVal a = Env {unEnv :: EnvAlias primTy primVal a}
   deriving newtype (Functor, Applicative, Monad)
   deriving
     (HasThrow "fromFrontendError" (Error primTy primVal))

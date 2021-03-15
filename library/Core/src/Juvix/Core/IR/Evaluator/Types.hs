@@ -68,28 +68,28 @@ deriving instance
   ) =>
   Show (Error extV extT primTy primVal)
 
-type TermExtFun ty ext' ext primTy primVal =
-  LookupFun ty ext' primTy primVal ->
-  IR.TermX ext primTy primVal ->
-  Either (Error IR.NoExt ext primTy primVal) (IR.Value primTy primVal)
+type TermExtFun extG extT primTy primVal =
+  LookupFun extG primTy primVal ->
+  IR.TermX extT primTy primVal ->
+  Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 
-type ElimExtFun ty ext' ext primTy primVal =
-  LookupFun ty ext' primTy primVal ->
-  IR.ElimX ext primTy primVal ->
-  Either (Error IR.NoExt ext primTy primVal) (IR.Value primTy primVal)
+type ElimExtFun extG extT primTy primVal =
+  LookupFun extG primTy primVal ->
+  IR.ElimX extT primTy primVal ->
+  Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 
-data ExtFuns ty ext' ext primTy primVal
+data ExtFuns extG extT primTy primVal
   = ExtFuns
-      { tExtFun :: TermExtFun ty ext' ext primTy primVal,
-        eExtFun :: ElimExtFun ty ext' ext primTy primVal
+      { tExtFun :: TermExtFun extG extT primTy primVal,
+        eExtFun :: ElimExtFun extG extT primTy primVal
       }
 
-rejectExts :: ExtFuns ty ext ext' primTy primVal
+rejectExts :: ExtFuns extG extT primTy primVal
 rejectExts =
   ExtFuns
     { tExtFun = \_ -> Left . UnsupportedTermExt,
       eExtFun = \_ -> Left . UnsupportedElimExt
     }
 
-type LookupFun ty ext primTy primVal =
-  IR.GlobalName -> Maybe (IR.GlobalWith (ty IR.NoExt) ext primTy primVal)
+type LookupFun ext primTy primVal =
+  IR.GlobalName -> Maybe (IR.Elim' ext primTy primVal)

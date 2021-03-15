@@ -179,11 +179,12 @@ switchNameSpace newNameSpace t@T {currentName}
     empty <- atomically emptyRecord
     -- addPathWithValue will create new name spaces if they don't
     -- already exist all the way to where we need it to be
-    newT <- do
-      addPathWithValue newNameSpace (Record empty) t
-      >>| \case
-        Lib.Right t -> t
-        Lib.Left {} -> t
+    newT <-
+      do
+        addPathWithValue newNameSpace (Record empty) t
+        >>| \case
+          Lib.Right t -> t
+          Lib.Left {} -> t
     -- here we repeat work,
     -- if we successfully added the value, then we have to go down the
     -- same path to retrieve the module, hence duplicating the work

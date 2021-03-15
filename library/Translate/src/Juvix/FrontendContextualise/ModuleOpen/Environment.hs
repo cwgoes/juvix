@@ -14,11 +14,11 @@ import qualified Data.HashSet as Set
 import Data.Kind (Constraint)
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as ResolveOpen
+import qualified Juvix.Desugar.Types as Old
 import Juvix.FrontendContextualise.Contextify.ResolveOpenInfo (Open (..))
+import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as ResolveOpen
 import Juvix.FrontendContextualise.Environment
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 import qualified Juvix.Library.HashMap as Map
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -166,8 +166,7 @@ newtype Context a = Ctx {antiAlias :: ContextAlias a}
 type SingleAlias term1 ty1 sumRep1 =
   ExceptT Error (StateT (SingleEnv term1 ty1 sumRep1) IO)
 
-newtype SingleCont term1 ty1 sumRep1 a
-  = SCtx {aSingle :: SingleAlias term1 ty1 sumRep1 a}
+newtype SingleCont term1 ty1 sumRep1 a = SCtx {aSingle :: SingleAlias term1 ty1 sumRep1 a}
   deriving (Functor, Applicative, Monad, MonadIO)
   deriving
     ( HasState "new" (New Context.T),

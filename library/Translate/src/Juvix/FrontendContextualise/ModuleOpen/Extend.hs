@@ -31,14 +31,14 @@
 --
 -- - for modules we can infer.
 module Juvix.FrontendContextualise.ModuleOpen.Extend
-  ( module Juvix.FrontendDesugar.RemoveDo.Extend,
+  ( module Juvix.Desugar.Extend,
     module Juvix.FrontendContextualise.ModuleOpen.Extend,
   )
 where
 
+import Juvix.Desugar.Extend hiding (extendExpression, extendTopLevel)
+import qualified Juvix.Desugar.Extend as Ext
 import Juvix.Frontend.Types.Base
-import Juvix.FrontendDesugar.RemoveDo.Extend hiding (extendExpression, extendTopLevel)
-import qualified Juvix.FrontendDesugar.RemoveDo.Extend as Ext
 import Juvix.Library
 
 extendTopLevel :: ExtTopLevel

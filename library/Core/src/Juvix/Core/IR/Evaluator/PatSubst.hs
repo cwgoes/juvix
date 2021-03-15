@@ -241,7 +241,9 @@ instance
   ( HasWeak primTy,
     HasWeak primVal
   ) =>
-  HasPatSubstTerm (OnlyExts.T ext) primTy
+  HasPatSubstTerm
+    (OnlyExts.T ext)
+    primTy
     (Param.TypedPrim primTy primVal)
     (Param.TypedPrim primTy primVal)
   where

@@ -1,13 +1,13 @@
 module Desugar where
 
-import qualified Data.Attoparsec.ByteString as Parsec
+import qualified Juvix.Desugar.Types as AST
 import qualified Juvix.Frontend.Parser as Parser
 import qualified Juvix.FrontendDesugar as Desugar
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as AST
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSym
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
+import qualified Text.Megaparsec as P
 
 allDesugar :: T.TestTree
 allDesugar =
@@ -20,8 +20,8 @@ shouldDesugar name x y =
   T.testGroup
     "Desugar tests"
     [ T.testCase
-        ("desugar: " <> name <> " " <> show x <> " should desugar to " <> show y)
-        ( fmap Desugar.op (Parsec.parseOnly (many Parser.topLevelSN) x)
+        ("desugar: " <> name)
+        ( fmap Desugar.op (P.parse (many Parser.topLevelSN) "" x)
             T.@=? Right y
         )
     ]

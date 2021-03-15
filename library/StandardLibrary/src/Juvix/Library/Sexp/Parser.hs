@@ -1,83 +1,67 @@
-module Juvix.Library.Sexp.Parser (parse) where
+{-# LANGUAGE TypeApplications #-}
 
-import qualified Data.Attoparsec.ByteString as Atto
-import qualified Data.ByteString.Char8 as Char8
+module Juvix.Library.Sexp.Parser
+  ( parse,
+  )
+where
+
 import qualified Data.Text.Encoding as Encoding
 import Juvix.Library hiding (list)
 import qualified Juvix.Library.NameSymbol as NameSymbol
+import qualified Juvix.Library.Parser as J
+import Juvix.Library.Parser.Internal (Parser, ParserError)
 import qualified Juvix.Library.Sexp.Types as Sexp
-import qualified Juvix.Library.Symbol.Lexer as Lexer
-import Prelude (String, fail)
+import qualified Text.Megaparsec as P
 
 -- | @parse@ parses any sexp expression into the Sexp type
-parse :: ByteString -> Either String Sexp.T
-parse = Atto.parseOnly (eatSpaces sexp)
+parse :: ByteString -> Either ParserError Sexp.T
+parse = P.parse (J.eatSpaces sexp) ""
 
 --------------------------------------------------------------------------------
 -- Sexp Main Parsers
 --------------------------------------------------------------------------------
-sexp :: Atto.Parser Sexp.T
-sexp = spaceLiner (list <|> (Sexp.Atom <$> atom))
+sexp :: Parser Sexp.T
+sexp = J.spaceLiner (list <|> (Sexp.Atom <$> atom))
 
-list :: Atto.Parser Sexp.T
+list :: Parser Sexp.T
 list = do
   d <- parens (many sexp)
   case d of
     [] -> pure Sexp.Nil
     _ -> pure (foldr Sexp.Cons Sexp.Nil d)
 
-atom :: Atto.Parser Sexp.Atom
+atom :: Parser Sexp.Atom
 atom = number <|> name
 
-name :: Atto.Parser Sexp.Atom
+name :: Parser Sexp.Atom
 name = do
   sym <- symbol
   pure (Sexp.A sym Nothing)
 
-number :: Atto.Parser Sexp.Atom
+number :: Parser Sexp.Atom
 number = do
-  int <- integer
+  int <- J.integer
   pure (Sexp.N int Nothing)
 
-symbol :: Atto.Parser NameSymbol.T
+symbol :: Parser NameSymbol.T
 symbol = do
   s <-
-    Atto.takeWhile1
+    P.takeWhile1P
+      (Just "Valid symbol")
       ( \x ->
-          Lexer.validStartSymbol x
-            || Lexer.validMiddleSymbol x
-            || Lexer.validInfixSymbol x
+          J.validStartSymbol x
+            || J.validMiddleSymbol x
+            || J.validInfixSymbol x
       )
   Encoding.decodeUtf8 s |> internText |> NameSymbol.fromSymbol |> pure
-
--- Code stolen from the other parser ☹
-
-integer :: Atto.Parser Integer
-integer = do
-  digits <- Atto.takeWhile Lexer.digit
-  case Char8.readInteger digits of
-    Just (x, _) -> pure x
-    Nothing -> fail "didn't parse an int"
 
 --------------------------------------------------------------------------------
 -- Helpers taken from the other parser
 --------------------------------------------------------------------------------
 
 -- edited a bit from the other parser
-between :: Word8 -> Atto.Parser p -> Word8 -> Atto.Parser p
-between fst p end = skipLiner fst *> spaceLiner p <* skipLiner end
+between :: Word8 -> Parser p -> Word8 -> Parser p
+between fst p end = J.skipLiner fst *> J.spaceLiner p <* J.skipLiner end
 
-parens :: Atto.Parser p -> Atto.Parser p
-parens p = between Lexer.openParen p Lexer.closeParen
-
-eatSpaces :: Atto.Parser p -> Atto.Parser p
-eatSpaces p = Atto.takeWhile emptyCheck *> p
-
-skipLiner :: Word8 -> Atto.Parser ()
-skipLiner p = spaceLiner (Atto.skip (== p))
-
-spaceLiner :: Atto.Parser p -> Atto.Parser p
-spaceLiner p = p <* Atto.takeWhile emptyCheck
-
-emptyCheck :: Word8 -> Bool
-emptyCheck x = Lexer.space == x || Lexer.endOfLine x
+parens :: Parser p -> Parser p
+parens p = between J.openParen p J.closeParen

@@ -50,7 +50,7 @@ topLevelLet =
     [T.testCase "guard test" (guard T.@=? guardExpected)]
   where
     guard =
-      Parser.parseOnly
+      Parser.parse
         "let foo x \
         \  | x == 2 = 3 + 4 + x \
         \  | else   = x + 2"
@@ -71,11 +71,11 @@ topLevelSig =
     ]
   where
     basic =
-      Parser.parseOnly "sig foo : int -> int -> int" |> singleEleErr
+      Parser.parse "sig foo : int -> int -> int" |> singleEleErr
     basicExpected =
       Sexp.parse "(:defsig foo (:infix -> int (:infix -> int int)))"
     usage =
-      Parser.parseOnly "sig foo 0 : int -> int -> int" |> singleEleErr
+      Parser.parse "sig foo 0 : int -> int -> int" |> singleEleErr
     -- may change in the future
     usageExpected =
       Sexp.parse "(:defsig foo (:usage 0 (:infix -> int (:infix -> int int))))"
@@ -90,7 +90,7 @@ topLevelType =
     ]
   where
     record =
-      Parser.parseOnly
+      Parser.parse
         "type foo x y z = \
         \ { y-axis : y \
         \ , x-axis : x \
@@ -104,7 +104,7 @@ topLevelType =
         \  x-axis x \
         \  z-axis z))"
     sumC =
-      Parser.parseOnly
+      Parser.parse
         "type foo x y z = \
         \  | Foo {y-axis : y, x-axis : x, z-axis : z} \
         \  | Bar (var1 : x) (var2 : y) \
@@ -122,7 +122,7 @@ topLevelType =
         \                       (:infix : cdr \
         \                       (:infix -> (foo y) (foo x y z))))))))"
     sig =
-      Parser.parseOnly "type foo x y z : typ -> typ -> typ = Foo a b c"
+      Parser.parse "type foo x y z : typ -> typ -> typ = Foo a b c"
         |> singleEleErr
     sigExpected =
       Sexp.parse
@@ -136,7 +136,7 @@ topLevelDeclaration =
     [ T.testCase "infix" (basic T.@=? basicE)
     ]
   where
-    basic = Parser.parseOnly "declare infixl foo 3" |> singleEleErr
+    basic = Parser.parse "declare infixl foo 3" |> singleEleErr
     basicE = Sexp.parse "(declare infixl foo 3)"
 
 topLevelModule :: T.TestTree
@@ -148,7 +148,7 @@ topLevelModule =
     ]
   where
     basic =
-      Parser.parseOnly
+      Parser.parse
         "mod foo = \
         \   let bar = 3 \
         \   type zar = Boo \
@@ -160,7 +160,7 @@ topLevelModule =
         \  (:defun bar () 3) \
         \  (type zar () (Boo)))"
     guard =
-      Parser.parseOnly
+      Parser.parse
         "mod foo x \
         \  | x == 3 = \
         \    let foo = 3 \
@@ -191,7 +191,7 @@ letTest =
     ]
   where
     basic =
-      Parser.parseOnly
+      Parser.parse
         "let foo y = \
         \  let fi = 3 in \
         \  fi"
@@ -202,7 +202,7 @@ letTest =
         \  (let fi () 3 \
         \    fi))"
     arguments =
-      Parser.parseOnly
+      Parser.parse
         "let foo y = \
         \  let fi x = 3 + x in \
         \  fi y"
@@ -220,7 +220,7 @@ moduleTest =
     [T.testCase "basic" (basic T.@=? basicExpected)]
   where
     basic =
-      Parser.parseOnly
+      Parser.parse
         "let foo = \
         \  mod Bar = \
         \    let bar = 3 \
@@ -242,7 +242,7 @@ tupleTest =
     "tuple parser"
     [T.testCase "basic" (basic T.@=? basicE)]
   where
-    basic = Parser.parseOnly "let foo = (1,2,3)" |> singleEleErr
+    basic = Parser.parse "let foo = (1,2,3)" |> singleEleErr
     basicE = Sexp.parse "(:defun foo () (:tuple 1 2 3))"
 
 listTest :: T.TestTree
@@ -251,7 +251,7 @@ listTest =
     "list parser"
     [T.testCase "basic" (basic T.@=? basicE)]
   where
-    basic = Parser.parseOnly "let foo = [1,2,3,4]" |> singleEleErr
+    basic = Parser.parse "let foo = [1,2,3,4]" |> singleEleErr
     basicE = Sexp.parse "(:defun foo () (:list 1 2 3 4))"
 
 recordTest :: T.TestTree
@@ -260,7 +260,7 @@ recordTest =
     "record parser"
     [T.testCase "basic" (basic T.@=? basicE)]
   where
-    basic = Parser.parseOnly "let foo = {a, b = 2}" |> singleEleErr
+    basic = Parser.parse "let foo = {a, b = 2}" |> singleEleErr
     basicE = Sexp.parse "(:defun foo () (:record (a) (b 2)))"
 
 doTest :: T.TestTree
@@ -270,7 +270,7 @@ doTest =
     [T.testCase "basic" (basic T.@=? basicE)]
   where
     basic =
-      Parser.parseOnly
+      Parser.parse
         "let foo xs = \
         \  a <- xs; \
         \  more-comp; \
@@ -290,7 +290,7 @@ lambdaTest =
     [T.testCase "basic" (basic T.@=? basicE)]
   where
     basic =
-      Parser.parseOnly
+      Parser.parse
         "let foo y = \
         \  \\x -> x + y"
         |> singleEleErr
@@ -306,7 +306,7 @@ openTest =
     [T.testCase "basic" (basic T.@=? basicE)]
   where
     basic =
-      Parser.parseOnly
+      Parser.parse
         "let foo y = \
         \  open Prelude in x + y"
         |> singleEleErr
@@ -322,7 +322,7 @@ parenTest =
     [T.testCase "basic" (basic T.@=? basicE)]
   where
     basic =
-      Parser.parseOnly "let foo y = (y + 3) * 9" |> singleEleErr
+      Parser.parse "let foo y = (y + 3) * 9" |> singleEleErr
     basicE =
       Sexp.parse
         "(:defun foo (y) \
@@ -335,7 +335,7 @@ blockTest =
     [T.testCase "basic" (basic T.@=? basicE)]
   where
     basic =
-      Parser.parseOnly "let foo y = 3 * begin y + y end" |> singleEleErr
+      Parser.parse "let foo y = 3 * begin y + y end" |> singleEleErr
     basicE =
       Sexp.parse
         "(:defun foo (y) \
@@ -348,7 +348,7 @@ primitiveTest =
     [T.testCase "basic" (basic T.@=? basicE)]
   where
     basic =
-      Parser.parseOnly "let add = %Michelson.add" |> singleEleErr
+      Parser.parse "let add = %Michelson.add" |> singleEleErr
     basicE =
       Sexp.parse
         "(:defun add () \
@@ -361,7 +361,7 @@ condTest =
     [T.testCase "basic" (basic T.@=? basicE)]
   where
     basic =
-      Parser.parseOnly
+      Parser.parse
         "let add x = \
         \ if | x == 3 = 1 \
         \    | x == 4 = 5 \
@@ -381,7 +381,7 @@ caseTest =
     [T.testCase "basic" (basic T.@=? basicE)]
   where
     basic =
-      Parser.parseOnly
+      Parser.parse
         "let foo = \
         \  case x of \
         \   | (A (B {a, b})) -> a + b \

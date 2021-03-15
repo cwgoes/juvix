@@ -1,7 +1,7 @@
-module Juvix.FrontendDesugar.RemoveSignature.Types where
+module Juvix.Desugar.Types where
 
+import qualified Juvix.Desugar.Extend as Ext
 import Juvix.Frontend.Types.Base
-import qualified Juvix.FrontendDesugar.RemoveSignature.Extend as Ext
 import Juvix.Library hiding (Product, Sum)
 
 data T
@@ -70,10 +70,6 @@ extendLambda "Lambda" [] [t|T|] Ext.extendLambda
 
 extendApplication "Application" [] [t|T|] Ext.extendApplication
 
-extendDo "Do" [] [t|T|] Ext.extendDo
-
-extendDoBody "DoBody" [] [t|T|] Ext.extendDoBody
-
 extendExpRecord "ExpRecord" [] [t|T|] Ext.extendExpRecord
 
 extendLet "Let" [] [t|T|] $ Ext.extendLet [t|T|]
@@ -103,6 +99,10 @@ extendCondLogic "CondLogic" [] [t|T|] $ const Ext.extendCondLogic
 extendModule "Module" [] [t|T|] Ext.extendModule
 
 extendSignature "Signature" [] [t|T|] Ext.extendSignature
+
+extendDo "Do" [] [t|T|] Ext.extendDo
+
+extendDoBody "DoBody" [] [t|T|] Ext.extendDoBody
 
 extendGuardBody "GuardBody" [] [t|T|] $ const Ext.extendGuardBody
 

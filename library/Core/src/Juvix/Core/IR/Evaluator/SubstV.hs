@@ -365,7 +365,9 @@ instance
     Param.CanApply primTy,
     Param.CanApply (Param.TypedPrim primTy primVal)
   ) =>
-  HasSubstValue IR.NoExt primTy
+  HasSubstValue
+    IR.NoExt
+    primTy
     (Param.TypedPrim primTy primVal)
     (Param.TypedPrim primTy primVal)
   where

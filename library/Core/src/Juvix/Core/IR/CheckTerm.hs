@@ -398,7 +398,7 @@ evalTC ::
   m (Typed.ValueT primTy primVal)
 evalTC t = do
   g <- ask @"globals"
-  liftEval $ Eval.evalTerm (flip HashMap.lookup g) t
+  liftEval $ Eval.evalTerm (Eval.lookupFun @T g) t
 
 -- | Subtyping. If @s <: t@ then @s@ is a subtype of @t@, i.e. everything of
 -- type @s@ can also be checked against type @t@.

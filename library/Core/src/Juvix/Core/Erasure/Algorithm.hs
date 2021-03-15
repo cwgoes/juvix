@@ -51,7 +51,7 @@ eraseAbstract (IR.Abstract name usage ty) =
 eraseDatatype ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.Datatype primTy1 primVal1 ->
-  m (Erasure.Datatype primTy2)
+  m (Erasure.Datatype primTy2 primVal2)
 eraseDatatype (IR.Datatype name _pos args level cons) = do
   args <- mapM eraseDataArg args
   cons <- mapM eraseDataCon cons
@@ -68,10 +68,11 @@ eraseDataArg (IR.DataArg name usage ty) = do
 eraseDataCon ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
   IR.DataCon primTy1 primVal1 ->
-  m (Erasure.DataCon primTy2)
-eraseDataCon (IR.DataCon name ty) = do
+  m (Erasure.DataCon primTy2 primVal2)
+eraseDataCon (IR.DataCon name ty def) = do
   ty <- eraseType ty
-  pure (Erasure.DataCon name ty)
+  def <- traverse eraseFunction def
+  pure (Erasure.DataCon name ty def)
 
 eraseFunction ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
@@ -91,7 +92,7 @@ eraseFunction (IR.Function name usage ty clauses) = do
 
 eraseFunClause ::
   ErasureM primTy1 primTy2 primVal1 primVal2 m =>
-  IR.FunClause' IR.NoExt primTy1 primVal1 ->
+  IR.FunClause primTy1 primVal1 ->
   m b
 eraseFunClause (IR.FunClause _tel patts term _rhsTy _catchAll _unreachable) = do
   patts <- mapM erasePattern patts

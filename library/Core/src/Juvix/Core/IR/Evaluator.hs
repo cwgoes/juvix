@@ -15,8 +15,8 @@ module Juvix.Core.IR.Evaluator
   )
 where
 
+import qualified Data.HashMap.Strict as HashMap
 import qualified Data.IntMap as IntMap
-import Data.Maybe (fromJust)
 import Juvix.Core.IR.Evaluator.PatSubst
 import Juvix.Core.IR.Evaluator.Subst
 import Juvix.Core.IR.Evaluator.SubstV
@@ -28,6 +28,7 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library
+import qualified Juvix.Library.Usage as Usage
 
 type NoExtensions ext primTy primVal =
   ( IR.TermX ext primTy primVal ~ Void,
@@ -56,57 +57,54 @@ type CanEval extT extG primTy primVal =
   )
 
 inlineAllGlobals ::
-  ( EvalPatSubst ext' primTy primVal,
-    IR.ToTerm ty IR.NoExt IR.NoExt,
+  ( EvalPatSubst ext primTy primVal,
     NoExtensions ext primTy primVal
   ) =>
-  IR.Term' (OnlyExts.T ext') primTy primVal ->
-  (IR.Name -> Maybe (IR.GlobalWith (ty IR.NoExt) ext primTy primVal)) ->
-  IR.Term' (OnlyExts.T ext') primTy primVal
+  IR.Term' ext primTy primVal ->
+  LookupFun ext primTy primVal ->
+  IR.Term' ext primTy primVal
 inlineAllGlobals t map =
   case t of
-    IR.Unit -> t
-    IR.UnitTy -> t
-    IR.Pair p1 p2 ->
-      IR.Pair (inlineAllGlobals p1 map) (inlineAllGlobals p2 map)
-    IR.Elim elim ->
-      IR.Elim (inlineAllGlobalsElim elim map)
-    IR.Sig u t1 t2 ->
-      IR.Sig u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map)
-    IR.Let u e t ->
-      IR.Let u (inlineAllGlobalsElim e map) (inlineAllGlobals t map)
-    IR.Lam t ->
-      IR.Lam (inlineAllGlobals t map)
-    IR.Pi u t1 t2 ->
-      IR.Pi u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map)
-    IR.Prim {} -> t
-    IR.PrimTy {} -> t
-    IR.Star {} -> t
+    IR.Unit' {} -> t
+    IR.UnitTy' {} -> t
+    IR.Pair' p1 p2 ann ->
+      IR.Pair' (inlineAllGlobals p1 map) (inlineAllGlobals p2 map) ann
+    IR.Elim' elim ann ->
+      IR.Elim' (inlineAllGlobalsElim elim map) ann
+    IR.Sig' u t1 t2 ann ->
+      IR.Sig' u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) ann
+    IR.Let' u e t ann ->
+      IR.Let' u (inlineAllGlobalsElim e map) (inlineAllGlobals t map) ann
+    IR.Lam' t ann ->
+      IR.Lam' (inlineAllGlobals t map) ann
+    IR.Pi' u t1 t2 ann ->
+      IR.Pi' u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) ann
+    IR.Prim' {} -> t
+    IR.PrimTy' {} -> t
+    IR.Star' {} -> t
 
 inlineAllGlobalsElim ::
-  ( EvalPatSubst ext' primTy primVal,
-    IR.ToTerm ty IR.NoExt IR.NoExt,
+  ( EvalPatSubst ext primTy primVal,
     NoExtensions ext primTy primVal
   ) =>
-  IR.Elim' (OnlyExts.T ext') primTy primVal ->
-  (IR.Name -> Maybe (IR.GlobalWith (ty IR.NoExt) ext primTy primVal)) ->
-  IR.Elim' (OnlyExts.T ext') primTy primVal
+  IR.Elim' ext primTy primVal ->
+  LookupFun ext primTy primVal ->
+  IR.Elim' ext primTy primVal
 inlineAllGlobalsElim t map =
   case t of
-    IR.Bound {} -> t
-    IR.Free name -> fromMaybe t $ map name >>= toLambda
-    IR.App elim term ->
-      IR.App (inlineAllGlobalsElim elim map) (inlineAllGlobals term map)
-    IR.Ann u t1 t2 uni ->
-      IR.Ann u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) uni
+    IR.Bound' {} -> t
+    IR.Free' (IR.Global name) _ann -> fromMaybe t $ map name
+    IR.Free' {} -> t
+    IR.App' elim term ann ->
+      IR.App' (inlineAllGlobalsElim elim map) (inlineAllGlobals term map) ann
+    IR.Ann' u t1 t2 uni ann ->
+      IR.Ann' u (inlineAllGlobals t1 map) (inlineAllGlobals t2 map) uni ann
 
 -- annotations are discarded
 evalTermWith ::
-  ( CanEval extT extT' primTy primVal,
-    IR.ToTerm ty IR.NoExt IR.NoExt
-  ) =>
-  LookupFun ty extT' primTy primVal ->
-  ExtFuns ty extT' extT primTy primVal ->
+  CanEval extT extG primTy primVal =>
+  LookupFun extG primTy primVal ->
+  ExtFuns extG extT primTy primVal ->
   IR.Term' (OnlyExts.T extT) primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalTermWith _ _ (IR.Star' u _) =
@@ -137,19 +135,17 @@ evalTermWith g exts (IR.TermX a) =
   tExtFun exts g a
 
 evalElimWith ::
-  ( CanEval extT extT' primTy primVal,
-    IR.ToTerm ty IR.NoExt IR.NoExt
-  ) =>
-  LookupFun ty extT' primTy primVal ->
-  ExtFuns ty extT' extT primTy primVal ->
+  CanEval extT extG primTy primVal =>
+  LookupFun extG primTy primVal ->
+  ExtFuns extG extT primTy primVal ->
   IR.Elim' (OnlyExts.T extT) primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalElimWith _ _ (IR.Bound' i _) =
   pure $ IR.VBound i
 evalElimWith g exts (IR.Free' x _)
   | IR.Global x <- x,
-    Just e <- toLambda =<< g x =
-    evalElimWith g exts e
+    Just e <- g x =
+    evalElimWith g exts $ toOnlyExtsE e
   | otherwise = pure $ IR.VFree x
 evalElimWith g exts (IR.App' s t _) =
   join $
@@ -162,47 +158,41 @@ evalElimWith g exts (IR.ElimX a) =
   eExtFun exts g a
 
 evalTerm ::
-  ( CanEval extT extT' primTy primVal,
-    IR.ToTerm ty IR.NoExt IR.NoExt
-  ) =>
-  LookupFun ty extT' primTy primVal ->
+  CanEval extT extG primTy primVal =>
+  LookupFun extG primTy primVal ->
   IR.Term' extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalTerm g t = evalTermWith g rejectExts $ OnlyExts.onlyExtsT t
 
 evalElim ::
-  ( CanEval extT extT' primTy primVal,
-    IR.ToTerm ty IR.NoExt IR.NoExt
-  ) =>
-  LookupFun ty extT' primTy primVal ->
+  CanEval extT extG primTy primVal =>
+  LookupFun extG primTy primVal ->
   IR.Elim' extT primTy primVal ->
   Either (Error IR.NoExt extT primTy primVal) (IR.Value primTy primVal)
 evalElim g e = evalElimWith g rejectExts $ OnlyExts.onlyExtsE e
 
 -- TODO generalise the @IR.NoExt@s
-toLambda ::
-  forall ty ext ext' primTy primVal.
+toLambda' ::
+  forall ext' ext primTy primVal.
   ( EvalPatSubst ext' primTy primVal,
-    NoExtensions ext primTy primVal,
-    IR.ToTerm ty IR.NoExt IR.NoExt
+    NoExtensions ext primTy primVal
   ) =>
-  IR.GlobalWith (ty IR.NoExt) ext primTy primVal ->
+  IR.GlobalUsage ->
+  IR.Term primTy primVal ->
+  [IR.Pattern' ext primTy primVal] ->
+  IR.Term' ext primTy primVal ->
   Maybe (IR.Elim' (OnlyExts.T ext') primTy primVal)
-toLambda (IR.GFunction (IR.Function {funUsage, funType, funClauses}))
-  | IR.FunClause _clauseTel pats rhs _rhsTy _catchall _unreachable :| [] <- funClauses = do
-    patVars <- traverse singleVar pats
-    let len = fromIntegral $ length patVars
-    let vars = map bound [len - 1, len - 2 .. 0]
-    let patMap = IntMap.fromList $ zip patVars vars
-    let transform = extTransformT $ OnlyExts.injector `compose` forgetter
-    let π = IR.globalToUsage funUsage
-    let ty = OnlyExts.injectT $ IR.toTerm funType
-    case patSubst patMap $ weakBy len $ transform rhs of
-      Left _ -> Nothing
-      Right x -> pure $ IR.Ann π (applyN len lam x) ty 0 -- FIXME universe
+toLambda' π' ty' pats rhs = do
+  patVars <- traverse singleVar pats
+  let len = fromIntegral $ length patVars
+  let vars = map bound $ genericTake len (iterate (subtract 1) (len - 1))
+  let patMap = IntMap.fromList $ zip patVars vars
+  let π = IR.globalToUsage π'
+  let ty = OnlyExts.injectT ty'
+  case patSubst patMap $ weakBy len $ toOnlyExtsT rhs of
+    Left _ -> Nothing
+    Right x -> pure $ IR.Ann π (applyN len lam x) ty 0 -- FIXME universe
   where
-    singleVar (IR.PVar' p _) = Just p
-    singleVar _ = Nothing
     applyN 0 _ x = x
     applyN n f x = applyN (n - 1) f (f $! x)
     bound :: IR.BoundVar -> IR.Elim' (OnlyExts.T ext') primTy primVal
@@ -211,4 +201,76 @@ toLambda (IR.GFunction (IR.Function {funUsage, funType, funClauses}))
       IR.Term' (OnlyExts.T z) primTy primVal ->
       IR.Term' (OnlyExts.T z) primTy primVal
     lam x = IR.Lam' x ()
+
+singleVar :: Alternative f => IR.Pattern' ext primTy primVal -> f IR.PatternVar
+singleVar (IR.PVar' p _) = pure p
+singleVar _ = empty
+
+toOnlyExtsT ::
+  NoExtensions ext1 primTy primVal =>
+  IR.Term' ext1 primTy primVal ->
+  IR.Term' (OnlyExts.T ext2) primTy primVal
+toOnlyExtsT = extTransformT $ OnlyExts.injector `compose` forgetter
+
+toOnlyExtsE ::
+  NoExtensions ext1 primTy primVal =>
+  IR.Elim' ext1 primTy primVal ->
+  IR.Elim' (OnlyExts.T ext2) primTy primVal
+toOnlyExtsE = extTransformE $ OnlyExts.injector `compose` forgetter
+
+toLambda ::
+  forall ext ext' primTy primVal.
+  ( EvalPatSubst ext' primTy primVal,
+    NoExtensions ext primTy primVal
+  ) =>
+  IR.Global' IR.NoExt ext primTy primVal ->
+  Maybe (IR.Elim' (OnlyExts.T ext') primTy primVal)
+toLambda (IR.GFunction (IR.Function {funUsage = π, funType = ty, funClauses}))
+  | IR.FunClause _ pats rhs _ _ _ :| [] <- funClauses =
+    toLambda' π (IR.quote ty) pats rhs
 toLambda _ = Nothing
+
+toLambdaR ::
+  forall ext ext' primTy primVal.
+  ( EvalPatSubst ext' primTy primVal,
+    NoExtensions ext primTy primVal
+  ) =>
+  IR.RawGlobal' ext primTy primVal ->
+  Maybe (IR.Elim' (OnlyExts.T ext') primTy primVal)
+toLambdaR (IR.RawGFunction f)
+  | IR.RawFunction {rawFunUsage = π, rawFunType = ty, rawFunClauses} <- f,
+    IR.RawFunClause _ pats rhs _ :| [] <- rawFunClauses =
+    toLambda' π (extForgetT ty) pats rhs
+toLambdaR _ = Nothing
+
+lookupFun ::
+  forall ext' ext primTy primVal.
+  ( EvalPatSubst ext' primTy primVal,
+    NoExtensions ext primTy primVal
+  ) =>
+  IR.Globals' IR.NoExt ext primTy primVal ->
+  LookupFun (OnlyExts.T ext') primTy primVal
+lookupFun globals x =
+  HashMap.lookup x globals >>= toLambda
+
+rawLookupFun ::
+  forall ext' ext primTy primVal.
+  ( EvalPatSubst ext' primTy primVal,
+    NoExtensions ext primTy primVal
+  ) =>
+  IR.RawGlobals' ext primTy primVal ->
+  LookupFun (OnlyExts.T ext') primTy primVal
+rawLookupFun globals x =
+  HashMap.lookup x globals >>= toLambdaR
+
+lookupFun' ::
+  EvalPatSubst IR.NoExt primTy primVal =>
+  IR.Globals primTy primVal ->
+  LookupFun IR.NoExt primTy primVal
+lookupFun' globals x = lookupFun @IR.NoExt globals x >>| extForgetE
+
+rawLookupFun' ::
+  EvalPatSubst IR.NoExt primTy primVal =>
+  IR.RawGlobals primTy primVal ->
+  LookupFun IR.NoExt primTy primVal
+rawLookupFun' globals x = rawLookupFun @IR.NoExt globals x >>| extForgetE

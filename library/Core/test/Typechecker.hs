@@ -202,7 +202,7 @@ shouldEval' ::
   T.TestTree
 shouldEval' g term res =
   T.testCase (show term <> " should evaluate to " <> show res) $
-    (IR.evalTerm (\x -> Map.lookup x g) term) T.@=? Right res
+    (IR.evalTerm (IR.lookupFun' g) term) T.@=? Right res
 
 shouldEval ::
   ( HasCallStack,

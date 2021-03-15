@@ -1,14 +1,10 @@
 module Desugar.Sexp (top) where
 
 import qualified Juvix.Desugar.Passes as Desugar
-import qualified Juvix.Frontend.Parser as Parser
-import qualified Juvix.Frontend.Sexp as Trans
-import qualified Juvix.Frontend.Types as Types
 import Juvix.Library hiding (head)
 import qualified Juvix.Library.Sexp as Sexp
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
-import Prelude (error, head)
 
 top :: T.TestTree
 top =
@@ -70,13 +66,13 @@ ifWorksAsExpected =
       Sexp.parse
         "(:defun foo (x) \
         \  (case (:infix + x 3)\
-        \     (true 2)\
-        \     (false (case (bar true)\
-        \               (true (:paren\
-        \                       (case (bar false)\
-        \                         (true 3)\
-        \                         (false (case else (true 5))))))\
-        \               (false (case else (true 3)))))))"
+        \     ((True) 2)\
+        \     ((False) (case (bar true)\
+        \                 ((True) (:paren\
+        \                           (case (bar false)\
+        \                             ((True) 3)\
+        \                             ((False) (case else ((True) 5))))))\
+        \                 ((False) (case else ((True) 3)))))))"
 
 -- TODO ∷ Add another let form which aren't combined
 letWorksAsExpected :: T.TestTree
@@ -241,14 +237,3 @@ modLetWorkAsExpected =
         \            (:let-type foo (() (XTZ))\
         \               (:record (bar) (foo))))\
         \     (foo)))"
-
---------------------------------------------------------------------------------
--- Helpers
---------------------------------------------------------------------------------
-
-singleEleErr :: Functor f => f (Types.Header Types.TopLevel) -> f Sexp.T
-singleEleErr = fmap (Trans.transTopLevel . head . noHeaderErr)
-
-noHeaderErr :: Types.Header topLevel -> [topLevel]
-noHeaderErr (Types.NoHeader xs) = xs
-noHeaderErr _ = error "imporper form"

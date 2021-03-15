@@ -6,8 +6,8 @@ import Control.Lens (set)
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
+import qualified Juvix.Desugar.Types as Repr
 import qualified Juvix.FrontendContextualise.Contextify.Types as Type
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Repr
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 

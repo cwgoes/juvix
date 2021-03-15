@@ -1,7 +1,6 @@
 module Golden where
 
-import Data.Attoparsec.ByteString (IResult (Done, Fail, Partial))
-import qualified Data.ByteString as ByteString (writeFile)
+import qualified Data.ByteString as ByteString (readFile, writeFile)
 import Data.ByteString.Char8 (pack)
 import qualified Data.Text as Text
 import qualified Juvix.Frontend.Parser as Parser
@@ -33,30 +32,10 @@ toByteString = Data.ByteString.Char8.pack . show
 
 parsedContract :: FilePath -> IO [TopLevel]
 parsedContract file = do
-  let failOutput i context error =
-        "Failed to parse!"
-          <> "The following input has not been consumed: "
-          <> i
-          <> "The list of context in which the error occurs is "
-          <> toByteString context
-          <> "The error message is "
-          <> toByteString error
-      failIO i context error =
-        writeFile (file <> ".parsed") (decodeUtf8 $ failOutput i context error)
-  --
-  readString <- readFile file
-  --
-  let rawContract = encodeUtf8 readString
-      --
-      handleParse (Partial cont) handlePartial =
-        handlePartial cont
-      handleParse (Fail i context err) _ =
-        failIO i context err *> pure []
-      handleParse (Done _ r) _ =
-        return (extractTopLevel r)
-  --
-  handleParse (Parser.parse rawContract) $
-    \cont -> handleParse (cont "") (const (return []))
+  rawContract <- ByteString.readFile file
+  case Parser.prettyParse rawContract of
+    Left err -> writeFile (file <> ".parsed") (toS err) *> pure []
+    Right x -> pure $ extractTopLevel x
 
 getGolden :: FilePath -> IO (Maybe [TopLevel])
 getGolden file = do

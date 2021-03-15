@@ -39,7 +39,7 @@ infixPlaceTest =
   where
     Right desugared =
       Desugar.op . AST.extractTopLevel
-        <$> Parser.parseOnly "let (+) = 3 declare infixl (+) 5"
+        <$> Parser.parse "let (+) = 3 declare infixl (+) 5"
 
 sumConTest :: T.TestTree
 sumConTest =
@@ -57,4 +57,4 @@ sumConTest =
         |> (T.@=? Just (Context.SumCon (Context.Sum Nothing "bool")))
     Right desugared =
       Desugar.op . AST.extractTopLevel
-        <$> Parser.parseOnly "type bool = True | False"
+        <$> Parser.parse "type bool = True | False"

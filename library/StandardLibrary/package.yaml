@@ -18,6 +18,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.11 && < 5
 - protolude
+- wl-pprint-text
 - containers
 - text
 - hashable
@@ -25,8 +26,8 @@ dependencies:
 - capability >= 0.2.0.0
 - time
 - lens
-# parser
-- attoparsec
+- megaparsec
+- word8
 - bytestring
 - mtl
 
@@ -49,6 +50,7 @@ ghc-options:
   - -static
   - -fwrite-ide-info
 
+# TODO: Specify which packages are exported
 
 when:
   condition: flag(incomplete-error)

@@ -286,6 +286,17 @@
        (:defun add ()
          (:primitive Michelson.add))
      #+end_src
+*** Declaration
+1. basic
+   - input
+     #+begin_src haskell
+       let foo = declare infixl (+) 3 in 3
+     #+end_src
+   - output
+     #+begin_src lisp
+       (:defun foo ()
+         (:declaim (infixl + 3) 3))
+     #+end_src
 *** Cond
 1. basic
    - input

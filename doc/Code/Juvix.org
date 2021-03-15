@@ -23,6 +23,7 @@
   + [[Environment]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Parser]]
 ** Core
 - _Relies on_
   + [[Erasure]]
@@ -55,7 +56,7 @@
   + [[FromFrontend/Types]]
   + [[HR]]
   + [[IR]]
-  + [[Base]]
+  + [[Types]]
   + [[Parameterisation]]
   + [[Translate]]
   + [[FrontendContextualise]]

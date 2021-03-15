@@ -13,11 +13,29 @@ import Data.Kind (Constraint)
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as Local
 import Juvix.FrontendContextualise.Environment
+  ( HasNew,
+    HasOld,
+    SymbLookup (..),
+    add,
+    addGlobal,
+    addUnknown,
+    addUnknownGlobal,
+    ask,
+    lookup,
+    lookupCurrent,
+    oneFilled,
+    remove,
+    removeGlobal,
+    removeOld,
+    setupFill,
+    setupNewModule,
+    switchContext,
+  )
 import qualified Juvix.FrontendContextualise.InfixPrecedence.ShuntYard as Shunt
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Types as New
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as Old
-import qualified Juvix.Library
 import Juvix.Library hiding (ask)
+import qualified Juvix.Library
 
 --------------------------------------------------------------------------------
 -- Type Aliases and effect setup
@@ -128,8 +146,7 @@ newtype Context a = Ctx {antiAlias :: ContextAlias a}
 type SingleAlias term1 ty1 sumRep1 =
   ExceptT Error (StateT (SingleEnv term1 ty1 sumRep1) IO)
 
-newtype SingleCont term1 ty1 sumRep1 a
-  = SCtx {aSingle :: SingleAlias term1 ty1 sumRep1 a}
+newtype SingleCont term1 ty1 sumRep1 a = SCtx {aSingle :: SingleAlias term1 ty1 sumRep1 a}
   deriving (Functor, Applicative, Monad)
   deriving
     ( HasState "new" (New Context.T),

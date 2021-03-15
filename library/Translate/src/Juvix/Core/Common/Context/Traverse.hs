@@ -95,44 +95,45 @@ recGroups' ::
   Context.NameSpace term ty sumRep ->
   m ()
 recGroups' injection ns = do
-  defs <- concat <$> for (NameSpace.toList1' ns) \(name, def) ->
-    case def of
-      Context.Record ns -> do
-        contextName <- gets @"context" Context.currentName
-        modify @"context"
-          ( \ctx ->
-              fromMaybe
-                ctx
-                ( Context.qualifyLookup
-                    (NameSymbol.fromSymbol (injection name))
-                    ctx
-                    >>= (`Context.inNameSpace` ctx)
-                )
-          )
-        recGroups' identity (Context.recordContents ns)
-        modify @"context"
-          (\ctx -> fromMaybe ctx (Context.inNameSpace contextName ctx))
-        pure []
-      Context.CurrentNameSpace -> do
-        curNS <- gets @"context" Context.currentNameSpace
-        recGroups' identity (Context.recordContents curNS)
-        pure []
-      _ -> do
-        qname <- qualify name
-        fvs <-
-          case def of
-            Context.Unknown mt ->
-              fv mt
-            Context.Information xs ->
-              fv xs
-            Context.TypeDeclar sum ->
-              fv sum
-            Context.Def (Context.D usage mty term prec) ->
-              (\a b c d -> a <> b <> c <> d) <$> fv usage <*> fv mty <*> fv term <*> fv prec
-            _ -> pure []
-        -- we remove the TopLevel. from fvs as it screws with the
-        -- algorithm resolution
-        pure [(def, qname, fmap Context.removeTopName fvs)]
+  defs <-
+    concat <$> for (NameSpace.toList1' ns) \(name, def) ->
+      case def of
+        Context.Record ns -> do
+          contextName <- gets @"context" Context.currentName
+          modify @"context"
+            ( \ctx ->
+                fromMaybe
+                  ctx
+                  ( Context.qualifyLookup
+                      (NameSymbol.fromSymbol (injection name))
+                      ctx
+                      >>= (`Context.inNameSpace` ctx)
+                  )
+            )
+          recGroups' identity (Context.recordContents ns)
+          modify @"context"
+            (\ctx -> fromMaybe ctx (Context.inNameSpace contextName ctx))
+          pure []
+        Context.CurrentNameSpace -> do
+          curNS <- gets @"context" Context.currentNameSpace
+          recGroups' identity (Context.recordContents curNS)
+          pure []
+        _ -> do
+          qname <- qualify name
+          fvs <-
+            case def of
+              Context.Unknown mt ->
+                fv mt
+              Context.Information xs ->
+                fv xs
+              Context.TypeDeclar sum ->
+                fv sum
+              Context.Def (Context.D usage mty term prec) ->
+                (\a b c d -> a <> b <> c <> d) <$> fv usage <*> fv mty <*> fv term <*> fv prec
+              _ -> pure []
+          -- we remove the TopLevel. from fvs as it screws with the
+          -- algorithm resolution
+          pure [(def, qname, fmap Context.removeTopName fvs)]
   let (g, fromV, _) = Graph.graphFromEdges defs
   let accum1 xs v =
         let (def, name, ys) = fromV v

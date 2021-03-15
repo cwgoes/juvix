@@ -11,6 +11,7 @@ module Juvix.FrontendContextualise
 where
 
 import qualified Juvix.Core.Common.Context as Context
+import qualified Juvix.Desugar.Types as Initial
 import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as ResolveOpen
 import qualified Juvix.FrontendContextualise.Contextify.Transform as Contextify
 import qualified Juvix.FrontendContextualise.Contextify.Types as Contextify
@@ -19,7 +20,6 @@ import qualified Juvix.FrontendContextualise.InfixPrecedence.Environment as Targ
 import qualified Juvix.FrontendContextualise.InfixPrecedence.Transform as Infix
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Module
 import qualified Juvix.FrontendContextualise.ModuleOpen.Transform as Module
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Initial
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSymbol
 
@@ -30,6 +30,8 @@ data Error
   deriving (Show)
 
 type Final f = Target.New f
+
+type Final' f = Target.New' f
 
 op ::
   NonEmpty (NameSymbol.T, [Initial.TopLevel]) -> IO (Either Error Target.FinalContext)

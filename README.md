@@ -115,7 +115,9 @@ We welcome contributions to the development of Juvix. See
 
 [Roswell](https://github.com/roswell/roswell) is required for automatic generation of documentation in [doc/Code](https://github.com/metastatedev/juvix/tree/develop/doc/Code).
 
-Once Roswell is installed one only needs to add `~/.roswell/bin` to their bash path along with running `ros install metastatedev/org-generation`.
+Once Roswell is installed one only needs to add `~/.roswell/bin` to their bash path along with running `ros install heliaxdev/org-generation`.
+
+Then run `scripts/precommit.sh`.
 
 #### REPL
 

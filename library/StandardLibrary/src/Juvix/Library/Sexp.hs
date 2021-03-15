@@ -16,6 +16,8 @@ module Juvix.Library.Sexp
     isAtomNamed,
     nameFromT,
     atomFromT,
+    groupBy2,
+    assoc,
   )
 where
 
@@ -87,6 +89,9 @@ cdr (Cons _ xs) = xs
 cdr Nil = Nil
 cdr (Atom a) = Atom a
 
+cadr :: T -> T
+cadr = car . cdr
+
 atom :: NameSymbol.T -> T
 atom x = Atom $ A x Nothing
 
@@ -104,3 +109,15 @@ atomFromT _ = Nothing
 nameFromT :: T -> Maybe NameSymbol.T
 nameFromT (Atom (A name _)) = Just name
 nameFromT _ = Nothing
+
+assoc :: T -> T -> Maybe T
+assoc t (car :> cdr)
+  | t == car = Just (cadr car)
+  | otherwise = assoc t cdr
+assoc _ Nil = Nothing
+assoc _ Atom {} = Nothing
+
+groupBy2 :: T -> T
+groupBy2 (a1 :> a2 :> rest) =
+  list [a1, a2] :> groupBy2 rest
+groupBy2 _ = Nil

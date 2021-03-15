@@ -128,8 +128,9 @@ arityRaw prim =
 toArg :: PrimVal' ext -> Maybe (Arg' ext)
 toArg App.Cont {} = Nothing
 toArg App.Return {retType, retTerm} =
-  Just $ App.TermArg $
-    App.Take
+  Just
+    $ App.TermArg
+    $ App.Take
       { usage = Usage.Omega,
         type' = retType,
         term = retTerm

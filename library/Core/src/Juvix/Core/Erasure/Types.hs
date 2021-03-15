@@ -20,8 +20,8 @@ import Juvix.Core.Erased.Types as Type
 import qualified Juvix.Core.Erased.Types as Erased
 import qualified Juvix.Core.Erased.Types.Base as Erased
 import qualified Juvix.Core.IR.Typechecker.Types as Typed
-import qualified Juvix.Core.IR.Types as IR
 import Juvix.Core.IR.Types (GlobalName, GlobalUsage, PatternVar)
+import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.Parameterisation as Param
 import Juvix.Library hiding (Datatype, Type, empty)
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -40,7 +40,8 @@ data Env primTy1 primTy2 primVal1 primVal2
   deriving (Generic)
 
 type EnvEraAlias primTy1 primTy2 primVal1 primVal2 =
-  ExceptT (Error primTy1 primVal1)
+  ExceptT
+    (Error primTy1 primVal1)
     (State (Env primTy1 primTy2 primVal1 primVal2))
 
 newtype EnvT primTy1 primTy2 primVal1 primVal2 a
@@ -126,12 +127,12 @@ type TermT primTy primVal = Term primTy (Typed.TypedPrim primTy primVal)
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendDatatype "Datatype" [] [t|T|] extDatatype
 
-data Datatype primTy
+data Datatype primTy primVal
   = Datatype
       { dataName :: GlobalName,
         dataArgs :: [DataArg primTy],
         dataLevel :: Natural,
-        dataCons :: [DataCon primTy]
+        dataCons :: [DataCon primTy primVal]
       }
 
 -- TODO: Figure out how to do this with extensible.
@@ -147,10 +148,11 @@ data DataArg primTy
 -- TODO: Figure out how to do this with extensible.
 -- IR.extendDataCon "DataCon" [] [t|T|] extDataCon
 
-data DataCon primTy
+data DataCon primTy primVal
   = DataCon
       { conName :: GlobalName,
-        conType :: Type primTy
+        conType :: Type primTy,
+        conDef :: Maybe (Function primTy primVal)
       }
 
 -- TODO: Figure out how to do this with extensible.
@@ -198,8 +200,8 @@ data Abstract primTy
       }
 
 data Global primTy primVal
-  = GDatatype (Datatype primTy)
-  | GDataCon (DataCon primTy)
+  = GDatatype (Datatype primTy primVal)
+  | GDataCon (DataCon primTy primVal)
   | GFunction (Function primTy primVal)
   | GAbstract (Abstract primTy)
 

@@ -1,21 +1,17 @@
 module Parser where
 
-import Data.Attoparsec.ByteString
-  ( IResult (Done, Fail, Partial),
-    Parser,
-    Result,
-    many',
-    parse,
-    parseOnly,
-  )
-import qualified Data.Attoparsec.ByteString.Char8 as Char8
+import Juvix.Frontend.Parser (parse)
 import qualified Juvix.Frontend.Parser as Parser
 import Juvix.Frontend.Types (Expression, TopLevel)
 import qualified Juvix.Frontend.Types as AST
 import Juvix.Library
 import qualified Juvix.Library.NameSymbol as NameSym
+import Juvix.Library.Parser (Parser, ParserError)
+import qualified Juvix.Library.Parser as J
 import qualified Test.Tasty as T
 import qualified Test.Tasty.HUnit as T
+import qualified Text.Megaparsec as P
+import qualified Text.Megaparsec.Byte as P
 import Prelude (String, error)
 
 allParserTests :: T.TestTree
@@ -72,30 +68,23 @@ infixTests =
 -- Parser Checker
 --------------------------------------------------------------------------------
 
-space :: Parser Word8
-space = Char8.char8 ' '
-
-test :: Either String [Expression]
+test :: Either ParserError [Expression]
 test =
-  parseOnly
-    (many' Parser.expressionSN)
+  P.parse
+    (P.many Parser.expressionSN)
+    ""
     "let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo \
     \= 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let foo = 3 let \
     \foo = 3 let foo = 3 let foo = 3 let foo = 3 "
 
-takeResult :: Result a -> a
-takeResult (Done _ x) = x
-takeResult (Partial y) = takeResult (y "")
-takeResult (Fail _ _ errorMsg) = error errorMsg
-
 shouldParseAs ::
-  (Show a, Eq a) => T.TestName -> (ByteString -> Result a) -> ByteString -> a -> T.TestTree
+  (Show a, Eq a) => T.TestName -> (ByteString -> Either ParserError a) -> ByteString -> a -> T.TestTree
 shouldParseAs name parses x y =
   T.testGroup
     "Parse tests"
     [ T.testCase
-        name
-        (takeResult (parses x) T.@=? y)
+        ("parse: " <> name <> " " <> show x <> " should parse to " <> show y)
+        (y T.@=? either (panic . toS . P.errorBundlePretty) identity (parses x))
     ]
 
 --------------------------------------------------------------------------------
@@ -131,12 +120,11 @@ removeNoComment =
 --------------------------------------------------------------------------------
 -- Parse Many at once
 --------------------------------------------------------------------------------
-
 many1FunctionsParser :: T.TestTree
 many1FunctionsParser =
   shouldParseAs
     "many1FunctionsParser"
-    (parse $ many Parser.topLevelSN)
+    (P.parse (P.some Parser.topLevelSN) "")
     ( ""
         <> "let foo a b c = (+) (a + b) c\n"
         <> "let bah = foo 1 2 3\n"
@@ -459,7 +447,7 @@ superArrowCase =
     |> AST.Infix
     |> shouldParseAs
       "superArrowCase"
-      (parse Parser.expression)
+      (P.parse Parser.expression "")
       "( b : Bah ->  c : B -o Foo) -> Foo a b -> a : Bah a c -o ( HAHAHHA -> foo )"
 
 --------------------------------------------------
@@ -614,7 +602,7 @@ typeNameNoUniverse =
     |> AST.Application
     |> shouldParseAs
       "typeNameNoUniverse"
-      (parse Parser.expression)
+      (P.parse Parser.expression "")
       "Foo a b c (b -o d) a c u"
 
 --------------------------------------------------------------------------------
@@ -631,7 +619,7 @@ simpleNamedCon =
     |> flip AST.MatchLogic (Just "foo")
     |> shouldParseAs
       "simpleNamedCon"
-      (parse Parser.matchLogic)
+      (P.parse Parser.matchLogic "")
       "foo@( Hi a b c )"
 
 matchMoreComplex :: T.TestTree
@@ -651,7 +639,7 @@ matchMoreComplex =
     |> flip AST.MatchLogic (Just "foo")
     |> shouldParseAs
       "matchMoreComplex"
-      (parse Parser.matchLogic)
+      (P.parse Parser.matchLogic "")
       "foo@( Hi nah@{ a = nah , f } b 5 )"
 
 --------------------------------------------------------------------------------
@@ -672,7 +660,7 @@ condTest1 =
     |> AST.C
     |> shouldParseAs
       "condTest1"
-      (parse Parser.cond)
+      (P.parse Parser.cond "")
       ( ""
           <> "if  | foo  = a\n"
           <> "    | else = b "
@@ -697,7 +685,7 @@ record1 =
     |> AST.ExpRecord
     |> shouldParseAs
       "record1"
-      (parse Parser.expression)
+      (P.parse Parser.expression "")
       "{a, b = 3+5}"
 
 --------------------------------------------------
@@ -722,7 +710,7 @@ parens1 =
     |> AST.Parened
     |> shouldParseAs
       "parens1"
-      (parse Parser.expression)
+      (P.parse Parser.expression "")
       "(       ( (({a, b = 3+5}))))"
 
 --------------------------------------------------
@@ -769,13 +757,13 @@ infixPlusFail :: T.TestTree
 infixPlusFail =
   T.testCase
     "parse: declare infixl + 5 should fail"
-    (isLeft (Parser.parseOnly "declare infixl + 5") T.@=? True)
+    (isLeft (Parser.parse "declare infixl + 5") T.@=? True)
 
 infixFail :: T.TestTree
 infixFail =
   T.testCase
     "parse: declare infixl foo.o 5 should fail"
-    (isLeft (Parser.parseOnly "declare infixl foo.o 5") T.@=? True)
+    (isLeft (Parser.parse "declare infixl foo.o 5") T.@=? True)
 
 qualifiedInfixTest :: T.TestTree
 qualifiedInfixTest =
@@ -801,7 +789,7 @@ letwordFail :: T.TestTree
 letwordFail =
   T.testCase
     "parse: letfad = 3 should fail"
-    (isLeft (Parser.parseOnly "letfad = 3") T.@=? True)
+    (isLeft (Parser.parse "letfad = 3") T.@=? True)
 
 reservedInfix :: T.TestTree
 reservedInfix =
@@ -852,8 +840,8 @@ caseOfWords =
 spacerSymb :: T.TestTree
 spacerSymb =
   let res =
-        case parse (Parser.spacer Parser.prefixSymbol) "Foo   f" of
-          Done f s -> f == "f" && s == "Foo"
+        case P.parse (J.spacer Parser.prefixSymbol) "" "Foo   f" of
+          Right f -> f == "Foo" -- && s == "Foo"
           _ -> False
    in T.testCase "symbol parser test: Foo f" (res T.@=? True)
 
@@ -865,34 +853,35 @@ vpsDashFrontFail :: T.TestTree
 vpsDashFrontFail =
   T.testCase
     "-Foo is not a valid prefix symbol"
-    (isLeft (parseOnly Parser.prefixSymbol "-Foo") T.@=? True)
+    (isLeft (P.parse Parser.prefixSymbol "" "-Foo") T.@=? True)
 
 vpsDashMiddle :: T.TestTree
 vpsDashMiddle =
   T.testCase
     "Foo-Foo is a valid prefix symbol"
-    (isRight (parseOnly Parser.prefixSymbol "Foo-Foo") T.@=? True)
+    (isRight (P.parse Parser.prefixSymbol "" "Foo-Foo") T.@=? True)
 
 questionMarktest :: T.TestTree
 questionMarktest =
   T.testCase
     "foo? is a valid prefix symbol"
-    (parseOnly Parser.prefixSymbol "foo?" T.@=? Right "foo?")
+    (P.parse Parser.prefixSymbol "" "foo?" T.@=? Right "foo?")
 
 bangtest :: T.TestTree
 bangtest =
   T.testCase
     "foo! is a valid prefix symbol"
-    (parseOnly Parser.prefixSymbol "foo!" T.@=? Right "foo!")
+    (P.parse Parser.prefixSymbol "" "foo!" T.@=? Right "foo!")
 
 --------------------------------------------------------------------------------
 -- Examples for testing
 --------------------------------------------------------------------------------
 
-contractTest :: Either String [TopLevel]
+contractTest :: Either ParserError [TopLevel]
 contractTest =
-  parseOnly
-    (many Parser.topLevelSN)
+  P.parse
+    (P.many Parser.topLevelSN)
+    ""
     ( ""
         <> "mod Token = "
         <> "  let Address = s : String.T {String.length s == 36} \n"

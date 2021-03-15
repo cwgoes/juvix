@@ -8,7 +8,7 @@ import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR
 import Juvix.Library
 
-data T ext
+data T (ext :: *)
 
 do
   ext' <- newName "ext"

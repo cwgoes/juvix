@@ -36,11 +36,11 @@ dependencies:
 ###########################
 # Dependency for Parsers
 ###########################
-- parsec
-- attoparsec
-- attoparsec-expr
+- megaparsec
 - aeson
+- parser-combinators
 - filepath
+- word8
 
 library:
   source-dirs: src

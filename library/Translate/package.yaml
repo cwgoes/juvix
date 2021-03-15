@@ -21,6 +21,7 @@ dependencies:
 - containers
 - dlist
 - syb
+- megaparsec
 
 default-extensions:
   - NoImplicitPrelude
@@ -79,4 +80,3 @@ tests:
     - tasty-quickcheck
     - text
     - bytestring
-    - attoparsec

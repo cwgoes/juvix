@@ -19,6 +19,7 @@ op :: [Sexp.T] -> [Sexp.T]
 op syn =
   syn
     >>| Pass.moduleTransform
+    >>| Pass.moduleLetTransform
     >>| Pass.condTransform
     >>| Pass.ifTransform
     >>| Pass.multipleTransLet

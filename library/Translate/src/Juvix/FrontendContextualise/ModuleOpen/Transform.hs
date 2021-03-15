@@ -6,10 +6,10 @@ import Control.Lens ((^.), set)
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Juvix.Core.Common.Context as Context
 import qualified Juvix.Core.Common.NameSpace as NameSpace
+import qualified Juvix.Desugar.Types as Old
 import qualified Juvix.FrontendContextualise.Contextify.ResolveOpenInfo as ResolveOpen
 import qualified Juvix.FrontendContextualise.ModuleOpen.Environment as Env
 import qualified Juvix.FrontendContextualise.ModuleOpen.Types as New
-import qualified Juvix.FrontendDesugar.RemoveDo.Types as Old
 import Juvix.Library
 import Prelude (error)
 

@@ -8,27 +8,27 @@ module Juvix.Core.IR.Types
     PatternVar,
     BoundVar,
     Universe,
-    RawDatatype',
-    Datatype',
-    RawDataCon',
-    DataCon',
-    FunctionWith (..),
-    RawFunction',
-    Function',
+    RawDatatype' (..),
+    Datatype' (..),
+    RawDataArg' (..),
+    DataArg' (..),
+    RawDataCon' (..),
+    DataCon' (..),
+    RawFunction' (..),
+    Function' (..),
+    RawFunClause' (..),
     FunClause' (..),
-    GlobalWith (..),
-    AbstractWith (..),
-    RawAbstract',
-    Abstract',
-    RawGlobal',
-    Global',
-    GlobalsWith,
+    RawAbstract' (..),
+    Abstract' (..),
+    RawGlobal' (..),
+    Global' (..),
     RawGlobals',
     Globals',
   )
 where
 
 import Juvix.Core.IR.Types.Base
+import Juvix.Core.IR.Types.Globals
 import Juvix.Library hiding (show)
 import qualified Juvix.Library.NameSymbol as NameSymbol
 import qualified Juvix.Library.Usage as Usage
@@ -45,7 +45,7 @@ extendNeutral "Neutral" [] [t|NoExt|] $ \_ _ -> defaultExtNeutral
 
 extendPattern "Pattern" [] [t|NoExt|] $ \_ _ -> defaultExtPattern
 
-type Datatype = Datatype' NoExt
+type Datatype = Datatype' NoExt NoExt
 
 type RawDatatype = RawDatatype' NoExt
 
@@ -53,7 +53,7 @@ type DataArg = DataArg' NoExt
 
 type RawDataArg = RawDataArg' NoExt
 
-type DataCon = DataCon' NoExt
+type DataCon = DataCon' NoExt NoExt
 
 type RawDataCon = RawDataCon' NoExt
 
@@ -61,9 +61,9 @@ type Function = Function' NoExt NoExt
 
 type RawFunction = RawFunction' NoExt
 
-type FunClause primTy primVal = FunClause' NoExt primTy primVal
+type FunClause = FunClause' NoExt NoExt
 
--- (no RawFunClause since a clause contains no types anyway)
+type RawFunClause = RawFunClause' NoExt
 
 type Abstract = Abstract' NoExt
 
@@ -73,7 +73,7 @@ type Global = Global' NoExt NoExt
 
 type RawGlobal = RawGlobal' NoExt
 
-type Globals primTy primVal = Globals' NoExt primTy primVal
+type Globals primTy primVal = Globals' NoExt NoExt primTy primVal
 
 type RawGlobals primTy primVal = RawGlobals' NoExt primTy primVal
 
@@ -126,21 +126,8 @@ globalToUsage :: GlobalUsage -> Usage.T
 globalToUsage GOmega = Usage.Omega
 globalToUsage GZero = Usage.SNat 0
 
-globalName :: GlobalWith ty ext primTy primVal -> NameSymbol.T
+globalName :: Global' extT extV primTy primVal -> NameSymbol.T
 globalName (GDatatype (Datatype {dataName})) = dataName
 globalName (GDataCon (DataCon {conName})) = conName
 globalName (GFunction (Function {funName})) = funName
 globalName (GAbstract (Abstract {absName})) = absName
-
-class ToTerm ty ext1 ext2 where
-  toTerm :: ty ext1 primTy primVal -> Term' ext2 primTy primVal
-
-instance ToTerm Term' ext ext where
-  toTerm = identity
-
--- TODO relate term & value exts in some way?
-instance ToTerm Value' NoExt NoExt where
-  toTerm = quote
-
-instance ToTerm Neutral' NoExt NoExt where
-  toTerm = quote . VNeutral

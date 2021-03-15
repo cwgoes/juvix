@@ -1,7 +1,47 @@
-module Juvix.Library.Symbol.Lexer where
+module Juvix.Library.Parser.Token
+  ( charToWord8,
+    wordToChr,
+    dash,
+    under,
+    space,
+    colon,
+    semi,
+    comma,
+    hash,
+    backSlash,
+    quote,
+    pipe,
+    equals,
+    at,
+    question,
+    dot,
+    bang,
+    amper,
+    times,
+    backtick,
+    div,
+    percent,
+    newLine,
+    openBracket,
+    closeBracket,
+    openParen,
+    closeParen,
+    openCurly,
+    closeCurly,
+    validStartSymbol,
+    validMiddleSymbol,
+    validInfixSymbol,
+    validUpperSymbol,
+    reservedSymbols,
+    reservedWords,
+    endOfLine,
+  )
+where
 
+import qualified Data.Set as Set
+import Data.Word8 (isDigit)
 import qualified GHC.Unicode as Unicode
-import Juvix.Library hiding (div, maybe, option, takeWhile)
+import Juvix.Library hiding (div, hash, maybe, option, takeWhile)
 
 charToWord8 :: Char -> Word8
 charToWord8 = fromIntegral . ord
@@ -117,7 +157,7 @@ validInfixSymbol w =
 validMiddleSymbol :: Word8 -> Bool
 validMiddleSymbol w =
   validStartSymbol w
-    || digit w
+    || isDigit w
     || w == dash
     || w == bang
     || w == question
@@ -127,5 +167,27 @@ validMiddleSymbol w =
 endOfLine :: (Eq a, Num a) => a -> Bool
 endOfLine w = w == 13 || w == 10
 
-digit :: (Ord a, Num a) => a -> Bool
-digit w = w <= 57 && w >= 48
+reservedWords :: (Ord a, IsString a) => Set a
+reservedWords =
+  Set.fromList
+    [ "let",
+      "val",
+      "type",
+      "case",
+      "in",
+      "open",
+      "if",
+      "cond",
+      "end",
+      "of",
+      "begin",
+      "sig",
+      "mod",
+      "declare",
+      "where"
+    ]
+
+reservedSymbols :: (Ord a, IsString a) => Set a
+reservedSymbols =
+  Set.fromList
+    ["=", "|", "", "--"]

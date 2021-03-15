@@ -75,9 +75,9 @@ ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
           error "malformed if"
             |> Sexp.addMetaToCar atom
     caseList pred then' =
-      [Sexp.atom "case", pred, Sexp.list [Sexp.atom "true", then']]
+      [Sexp.atom "case", pred, Sexp.list [Sexp.list [Sexp.atom "True"], then']]
     caseListElse pred then' else' =
-      caseList pred then' <> [Sexp.list [Sexp.atom "false", else']]
+      caseList pred then' <> [Sexp.list [Sexp.list [Sexp.atom "False"], else']]
 
 ------------------------------------------------------------
 -- Defun Transformation
@@ -97,10 +97,10 @@ ifTransform xs = Sexp.foldPred xs (== "if") ifToCase
 --         (let f (arg-match-n1 … arg-match-nn) body-n
 --            rest)))
 -- - BNF output form
---   + (:let f ((args-match-11 … args-match-1n) body-1
---              (args-match-21 … args-match-2n) body-2
---              …
---              (args-match-n1 … args-match-nn) body-n)
+--   + (:let-match f ((args-match-11 … args-match-1n) body-1
+--                    (args-match-21 … args-match-2n) body-2
+--                    …
+--                    (args-match-n1 … args-match-nn) body-n)
 --        rest)
 -- - Note the f's are exactly the same name
 multipleTransLet :: Sexp.T -> Sexp.T
@@ -204,15 +204,15 @@ multipleTransDefun = search
 --         ((arg-n1 … arg-nn) body-n))
 combineSig :: [Sexp.T] -> [Sexp.T]
 combineSig
-  ( Sexp.List [Sexp.Atom (Sexp.A ":defsig" _), name, sig] :
+  ( (Sexp.Atom (Sexp.A ":defsig" _) Sexp.:> name Sexp.:> sig Sexp.:> Sexp.Nil) :
       (Sexp.Atom a@(Sexp.A ":defun-match" _) Sexp.:> defName Sexp.:> body) :
       xs
     )
     | defName == name =
       Sexp.addMetaToCar a (Sexp.listStar [Sexp.atom ":defsig-match", name, sig, body])
         : combineSig xs
-combineSig (Sexp.List [Sexp.Atom a@(Sexp.A ":defun-match" _), defName, body] : xs) =
-  Sexp.addMetaToCar a (Sexp.list [Sexp.atom ":defsig-match", defName, Sexp.Nil, body])
+combineSig ((Sexp.Atom a@(Sexp.A ":defun-match" _) Sexp.:> defName Sexp.:> body) : xs) =
+  Sexp.addMetaToCar a (Sexp.listStar [Sexp.atom ":defsig-match", defName, Sexp.Nil, body])
     : combineSig xs
 combineSig (Sexp.List [Sexp.Atom (Sexp.A ":defsig" _), _, _] : xs) =
   combineSig xs

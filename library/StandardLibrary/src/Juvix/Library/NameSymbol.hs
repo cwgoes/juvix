@@ -8,7 +8,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.String (IsString (..))
 import qualified Data.Text as Text
 import Juvix.Library
-import qualified Juvix.Library.Symbol.Lexer as Lexer
+import qualified Juvix.Library.Parser.Token as Tok
 import qualified Prelude (foldr1)
 
 type T = NonEmpty Symbol
@@ -37,7 +37,7 @@ handleInfix (x : xs) = rec' (x : xs) ""
       rec' xs (Text.snoc currentInfixSymbol '.')
     rec' (x : xs) build
       -- case 1)
-      | Lexer.validInfixSymbol (Lexer.charToWord8 (Text.head x)) =
+      | Tok.validInfixSymbol (Tok.charToWord8 (Text.head x)) =
         rec' xs (build <> Text.cons '.' x)
       | Text.null build =
         x : rec' xs build

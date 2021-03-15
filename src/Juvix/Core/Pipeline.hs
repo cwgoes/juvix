@@ -78,8 +78,9 @@ lookupMapPrim ns (App.Cont f xs n) =
     lookupArg (App.FreeArg x) = pure $ App.VarArg x
     lookupArg (App.TermArg t) = pure $ App.TermArg t
     error i =
-      Left $ Erasure.InternalError $
-        "unknown de Bruijn index " <> show i
+      Left
+        $ Erasure.InternalError
+        $ "unknown de Bruijn index " <> show i
 
 eraseGlobals ::
   MichelsonCompConstraints m =>
