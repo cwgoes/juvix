@@ -240,13 +240,36 @@ searchAndClosure ctx a as cont
   -- This case is a bit special, as we must check the context for
   -- various names this may introduce to the
   | named ":open-in" = openIn ctx as cont
-  | named ":declaim" = undefined
+  | named ":declaim" = declaim as cont
+  | named ":let-match" = letMatch as cont
+  | named ":let-type" = undefined
+  | named "type" = type' as cont
   where
     named = Sexp.isAtomNamed (Sexp.Atom a)
 
 ------------------------------------------------------------
 -- searchAndClosure function dispatch table
 ------------------------------------------------------------
+
+letType :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
+letType (Sexp.List [assocName, args, dat, body]) cont = do
+  local @"closure" (\cnt -> foldr genericBind cnt (grabBindings <> grabConsturctors)) $ do
+    d <- cont dat
+    assoc <- cont assocName
+    bod <- cont body
+    pure $ Sexp.list [assoc, args, d, bod]
+  where
+    grabBindings = nameStar args
+    grabConsturctors = nameGather dat
+
+type' :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
+type' (assocName Sexp.:> args Sexp.:> dat) cont =
+  local @"closure" (\cnt -> foldr genericBind cnt grabBindings) $ do
+    d <- cont dat
+    assoc <- cont assocName
+    pure $ assoc Sexp.:> args Sexp.:> d
+  where
+    grabBindings = nameStar args
 
 -- | @openIn@ opens @mod@, adding the contents to the closure of
 -- @body@. Note that we first =resolve= what mod is by calling the
@@ -285,6 +308,16 @@ lambdaCase :: HasClosure f => Sexp.T -> (Sexp.T -> f Sexp.T) -> f Sexp.T
 lambdaCase binds cont =
   mapF (`matchMany` cont) binds
 
+letMatch :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
+letMatch (Sexp.List [name, bindings, body]) cont
+  | Just nameSymb <- eleToSymbol name =
+    local @"closure" (genericBind nameSymb) $ do
+      -- this just makes it consistent with the lambdaCase case
+      let grouped = Sexp.groupBy2 bindings
+      form <- mapF (`matchMany` cont) grouped
+      bod <- cont body
+      pure $ Sexp.list [name, Sexp.unGroupBy2 form, bod]
+
 -- | @case'@ is similar to @lambdaCase@ except that it has a term it's
 -- matching on that it must first change without having an extra
 -- binders around it
@@ -295,13 +328,30 @@ case' (t Sexp.:> binds) cont = do
   pure (Sexp.Cons op binding)
 case' _ _ = error "malformed case"
 
+-- This works as we should only do a declaration after the function
+-- locally, so if it gets overwritten its' not a big deal
+
+-- | @declaim@ takes a declaration and adds the declaration information
+-- to the context
+declaim :: HasClosure f => Sexp.T -> (Sexp.T -> f Sexp.T) -> f Sexp.T
+declaim (Sexp.List [d, e]) cont
+  | Just (name, information) <- declaration d =
+    local @"closure" (addToClosure name information) $ do
+      -- safe to do dec here, as if we modify the declaration it
+      -- would be fine to do it after, as all a pass would do is to
+      -- make it a namesymbol, meaning it wouldn't work as is ☹
+      dec <- cont d
+      exp <- cont e
+      pure $ Sexp.list [dec, exp]
+declaim _ _ = error "malformed declaim"
+
 ------------------------------------------------------------
 -- Helpers for the various Search and Closure dispatch
 ------------------------------------------------------------
 
 -- | @matchMany@ deals with a @((binding-1 … binding-n) body) term, and
 -- proper continues the transformation on the body, and the bindings
--- after making sure to register that they are indeed bound termxs
+-- after making sure to register that they are indeed bound terms
 matchMany :: HasClosure m => Sexp.T -> (Sexp.T -> m Sexp.T) -> m Sexp.T
 matchMany = matchGen nameStar
 
@@ -353,6 +403,46 @@ nameStar (x Sexp.:> xs)
     nameStar xs
 nameStar Sexp.Atom {} = []
 nameStar Sexp.Nil = []
+
+-- Sexp.parse "((Cons (:arrow (:infix -> Int Int))) (Nil))" >>| nameGather
+
+-- | @nameGather@ takes an adt sexp and extracts the constructors from it
+nameGather :: Sexp.T -> [Symbol]
+nameGather ((caar Sexp.:> _cdar) Sexp.:> cdr)
+  | Just symb <- eleToSymbol caar,
+    symb /= ":" || symb /= ":record-d" =
+    symb : nameGather cdr
+nameGather (_ Sexp.:> cdr) = nameGather cdr
+nameGather _ = []
+
+------------------------------------------------------------
+-- Helpers for declaim
+------------------------------------------------------------
+
+-- | @declaration@ takes a declaration and tries to get the information
+-- along with the name from it.
+-- - Note :: we can only get symbol declarations to update, as we rely
+--   on closure semantics whicich only work on symbols unfortunately.
+declaration :: Sexp.T -> Maybe (Symbol, Information)
+declaration (Sexp.List [inf, n, i])
+  | Just Sexp.N {atomNum} <- Sexp.atomFromT i,
+    Just atomName <- eleToSymbol n =
+    let func =
+          if  | Sexp.isAtomNamed inf "infix" ->
+                Context.NonAssoc
+              | Sexp.isAtomNamed inf "infixl" ->
+                Context.Left
+              | Sexp.isAtomNamed inf "infixr" ->
+                Context.Right
+              | otherwise -> error "malformed declaration"
+     in Just
+          ( atomName,
+            Info
+              Nothing
+              [Context.Prec $ Context.Pred func (fromInteger atomNum)]
+              Nothing
+          )
+declaration _ = Nothing
 
 ------------------------------------------------------------
 -- Move to Sexp library

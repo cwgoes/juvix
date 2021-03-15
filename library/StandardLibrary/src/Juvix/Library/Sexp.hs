@@ -20,6 +20,7 @@ module Juvix.Library.Sexp
     assoc,
     cadr,
     foldSearchPred,
+    unGroupBy2,
   )
 where
 
@@ -181,3 +182,10 @@ groupBy2 :: T -> T
 groupBy2 (a1 :> a2 :> rest) =
   list [a1, a2] :> groupBy2 rest
 groupBy2 _ = Nil
+
+unGroupBy2 :: T -> T
+unGroupBy2 (List [a1, a2] :> rest) =
+  a1 :> a2 :> unGroupBy2 rest
+unGroupBy2 (a :> rest) =
+  a :> unGroupBy2 rest
+unGroupBy2 a = a
