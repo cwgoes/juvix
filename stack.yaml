@@ -15,53 +15,28 @@ packages:
 extra-deps:
 # - llvm-hs-9.0.1
 # - llvm-hs-pure-9.0.0
-- constraints-0.11
-- semirings-0.5.1
-- brick-0.46
 - capability-0.3.0.0@sha256:0f198c6523b940517670c0ba62e4ee19622c3bb3d8c1b80293e5a882a150b41f,3262
 - derive-storable-0.2.0.0@sha256:a5bb3fb8feb76e95c713f3a5e401f86b7f622dd598e747cad4324b33933f27e1,2422
 - derive-storable-plugin-0.2.3.0@sha256:11adeef08d4595cfdfefa2432f6251ba5786ecc2bf0488d36b74e3b3e5ca9ba9,2817
 - fgl-visualize-0.1.0.1@sha256:e682066053a6e75478a08fd6822dd0143a3b8ea23244bdb01dd389a266447c5e,995
-- ghci-pretty-0.0.2@sha256:5f6c2a9f1d391aa0ad3c3d0bfe1f39decfe94be50fbf5a5279e2dbc18f8b4c51,1409
-# - llvm-hs-pretty-0.6.2.0@sha256:4c600122965e8dff586bdca0044ec2b1896f2875c2da5ad89bbab9799c9697cd,1670
-- mod-0.1.0.0@sha256:63cd4e996b9453ffbe11dc515f57d762ba50276f05507b2372c6d9e733254768,1597
-- restless-git-0.7@sha256:346a5775a586f07ecb291036a8d3016c3484ccdc188b574bcdec0a82c12db293,968
-
-- semver-range-0.2.8@sha256:44918080c220cf67b6e7c8ad16f01f3cfe1ac69d4f72e528e84d566348bb23c3,1941
-- tree-view-0.5@sha256:85fbc67b53c1ef47f020a69051e6a29b27481698fe802cd2ed8ab0108aa69a38,1231
 - witherable-0.3.5@sha256:6590a15735b50ac14dcc138d4265ff1585d5f3e9d3047d5ebc5abf4cd5f50084,1476
-- HSH-2.1.3@sha256:71ded11b224f5066373ce985ec63b10c87129850b33916736dd64fa2bea9ea0a,1705
 - aeson-options-0.1.0@sha256:2d0c25afbb2d038bd5b57de8d042e319ea1a5ec7d7b92810d8a0cf0777882b6a,1244
 - base58-bytestring-0.1.0@sha256:a1da72ee89d5450bac1c792d9fcbe95ed7154ab7246f2172b57bd4fd9b5eab79,1913
 - hex-text-0.1.0.0@sha256:52dc2cf5ce45f7d86ea5e56e2ac57820f788c10bbb3fe83f6d57e678a426305b,1072
-- ipprint-0.6@sha256:48ffe7c5acab06fbd70a68aa12bc980cc33dcf8f41bd76d692e3dee8805584c7,1417
-- pretty-terminal-0.1.0.0@sha256:e9135d86ebb2a8e3aaf5a79088de4628dbd49988388e0fbfc26c5ecb3c399ad9,1638
 - show-type-0.1.1@sha256:24f681a3481b3f9630e619d816054804ba1bd6cc05b5978ddd2cece8499ff2fa,1154
 - witherable-class-0@sha256:91f05518f9f4af5b02424f13ee7dcdab5d6618e01346aa2f388a72ff93e2e501,775
-- Unixutils-1.54.1@sha256:c6afbaf6d68ba229d0d262e066376c300f25b798d5752f162476155cadf1114d,1123
-- show-please-0.5.5@sha256:5ca32d758486dfb839ec428a8bf356187e1ac8e440cd90585e92b1ded2b3ae87,681
 - unexceptionalio-0.5.0@sha256:ad0b2d4d1f62a3e24cdb80360eea42ab3f0a0559af42aba19b5cf373378913ce,1682
-- userid-0.1.3.4@sha256:607890fb4363c1d63368a2e96920d3671955feae815d5e2622e35717badad6f6,1172
-- boomerang-1.4.5.7@sha256:67358e1ed44db2da2bf5ba8b5ccde4e3cd19adbc286c5308dba448f89fb03c4a,1979
-- web-routes-th-0.22.6.5@sha256:bdbb13f1c2307ca8b27c45c6cfd03e5c9b014c096e9b661a672625d46e0f6bb2,1561
 - base-noprelude-4.13.0.0@sha256:3cccbfda38e1422ca5cc436d58858ba51ff9114d2ed87915a6569be11e4e5a90,6842
-- fmt-0.6.1.2@sha256:405a1bfc0ba0fd99f6eb1ee71f100045223f79204f961593012f28fd99cd1237,5319
 - named-0.3.0.1@sha256:69b9722301201f8ed8abc89c4595e22c746e944bf4cdfafa8b21b14d336b26d1,2233
 - vinyl-0.12.1@sha256:03f5e246fae2434250987bbfe708015dc6e23f60c20739c34738acde1383b96c,3921
 - tasty-hunit-compat-0.2@sha256:71e077ae5c514fadd4586efc19315f10fa5f3c94770820f68f63768441d665f7,1199
-- github: acid-state/safecopy
-  commit: 1be0894daeefff5126b25c9483ce2bf21845d05b
 - github: seereason/sr-extra
   commit: d5435dcb2ae5da5f9e0fb8e5a3c40f99937a046f
-# - github: cwgoes/haskell-z3
-#   commit: 889597234bcdf5620c5a69d3405ab4d607ba4d71
-- github: cwgoes/uuid-orphans
-  commit: e23b58b46affb978c17a0eb3e760d28b058658ce
 - github: cryptiumlabs/jsonschema-gen
   commit: 0639cd166ec59a04d07a3a7d49bdf343e567000e
-- github: adjoint-io/poly
-  commit: b75b853025ea75ba64f62f39d4524832f0117e36
-- github: metastatedev/extensible-data
+# - github: adjoint-io/poly
+#   commit: b75b853025ea75ba64f62f39d4524832f0117e36
+- github: heliaxdev/extensible-data
   commit: d11dee6006169cb537e95af28c3541a24194dea8
 
 ################################################################################
@@ -85,8 +60,13 @@ extra-deps:
 # morley deps
 ################################################################################
 
-- morley-1.2.0
+- morley-1.13.0
 - morley-prelude-0.3.0@sha256:9e9473ac14cfa206adf0a3700764c0251de05042f1fe45daf9cb8556079ae663,2085
+- uncaught-exception-0.1.0@sha256:a03f8c2a1a8b2fc40ca9477599f2d8bcf46ce06465ab42c121b4d2481effc21e,2046
+- with-utf8-1.0.2.2@sha256:42eed140390b3e93d9482b084d1d0150e8774667f39c33bd47e84815751fad09,3057
+- th-env-0.1.0.2@sha256:d8f1f37f42a8f1a22404d7d0579528af18f5dac7232cca6bdbd5117c115a0ad5,1370
+- cryptonite-0.28
+
 
 - git: https://gitlab.com/obsidian.systems/tezos-bake-monitor-lib.git
   commit: 9356f64a6dfc5cf9b108ad84d1f89bcdc1f08174
