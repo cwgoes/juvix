@@ -26,14 +26,13 @@ dummyInterpretContract ::
   Alias.Contract -> Either Interpret.InterpretError Interpret.InterpretResult
 dummyInterpretContract contract = _
 {-
-  Interpret.interpret
+  Interpret.interpretUntyped
     contract
-    _
     Value.ValueUnit
     Value.ValueUnit
     Contract.dummyContractEnv
-  |> Interpret.handleContractReturn
 -}
+
 
 dummyInterpret ::
   Types.EmptyInstr ->
@@ -127,8 +126,11 @@ untypeValue val =
       pure (vList Value.ValueMap x)
     TValue.VOp _ ->
       Left Types.OpInMichelsonValue
-    TValue.VBls12381Fr _ -> _
-    TValue.VBls12381G1 _ -> _
-    TValue.VBls12381G2 _ -> _
+    TValue.VBls12381Fr _ ->
+      Left Types.FieldEltInMichelsonValue
+    TValue.VBls12381G1 _ ->
+      Left Types.FieldEltInMichelsonValue
+    TValue.VBls12381G2 _ ->
+      Left Types.FieldEltInMichelsonValue
   where
     vList ctor = maybe Value.ValueNil ctor . nonEmpty
