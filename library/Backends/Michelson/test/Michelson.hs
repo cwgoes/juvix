@@ -806,13 +806,17 @@ constUIntAns =
                       ( TPair
                           ""
                           ""
+                          ""
+                          ""
                           (M.Type TUnit "")
                           ( M.Type
                               ( TPair
                                   ""
                                   ""
+                                  ""
+                                  ""
                                   (M.Type TInt "")
-                                  (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
+                                  (M.Type (TPair "" "" "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
                               )
                               ""
                           )
@@ -954,13 +958,19 @@ identityTermAns =
                       ( TPair
                           ""
                           ""
+                          ""
+                          ""
                           (M.Type TUnit "")
                           ( M.Type
                               ( TPair
                                   ""
                                   ""
+                                  ""
+                                  ""
                                   ( M.Type
                                       ( TPair
+                                          ""
+                                          ""
                                           ""
                                           ""
                                           (M.Type TUnit "")
@@ -975,11 +985,11 @@ identityTermAns =
                       )
                       ""
                   )
-                  (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
+                  (M.Type (TPair "" "" "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
               )
               ""
           )
-          (M.Type (TPair "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
+          (M.Type (TPair "" "" "" "" (M.Type TUnit "") (M.Type TUnit "")) "")
           [ SeqEx [],
             PrimEx (DIG 0),
             PrimEx (CAR "" ""),
