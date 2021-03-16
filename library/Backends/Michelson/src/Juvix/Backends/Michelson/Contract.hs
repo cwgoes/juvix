@@ -3,9 +3,9 @@
 module Juvix.Backends.Michelson.Contract where
 
 import qualified Michelson.Interpret as Interpt
-import qualified Michelson.Test as Test
+import qualified Michelson.Runtime.Dummy as Dummy
 
 -- TODO ∷ make a real environment
 -- Though does it matter?
 contract :: Interpt.ContractEnv
-contract = Test.dummyContractEnv
+contract = Dummy.dummyContractEnv

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fdefer-typed-holes #-}
+
 {-# LANGUAGE ViewPatterns #-}
 
 module Juvix.Backends.Michelson.DSL.Interpret where
@@ -12,7 +14,7 @@ import qualified Michelson.Interpret as Interpret
 import qualified Michelson.Text as Text
 import qualified Michelson.Typed.Aliases as TAlias
 import qualified Michelson.Typed.Convert as Convert
-import qualified Michelson.Typed.EntryPoints as Entry
+import qualified Michelson.Typed.Entrypoints as Entry
 import qualified Michelson.Typed.Instr as Instr
 import qualified Michelson.Typed.Value as TValue
 import qualified Michelson.Untyped.Aliases as Alias
@@ -22,12 +24,16 @@ import qualified Tezos.Crypto as Crypto
 
 dummyInterpretContract ::
   Alias.Contract -> Either Interpret.InterpretError Interpret.InterpretResult
-dummyInterpretContract contract =
-  Interpret.interpretUntyped
+dummyInterpretContract contract = _
+{-
+  Interpret.interpret
     contract
+    _
     Value.ValueUnit
     Value.ValueUnit
     Contract.dummyContractEnv
+  |> Interpret.handleContractReturn
+-}
 
 dummyInterpret ::
   Types.EmptyInstr ->
@@ -121,5 +127,8 @@ untypeValue val =
       pure (vList Value.ValueMap x)
     TValue.VOp _ ->
       Left Types.OpInMichelsonValue
+    TValue.VBls12381Fr _ -> _
+    TValue.VBls12381G1 _ -> _
+    TValue.VBls12381G2 _ -> _
   where
     vList ctor = maybe Value.ValueNil ctor . nonEmpty

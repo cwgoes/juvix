@@ -9,7 +9,6 @@ where
 
 import qualified Control.Arrow as Arr
 import Control.Monad.Fail (fail)
-import Data.Foldable (foldr1) -- on NonEmpty
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import qualified Juvix.Backends.Michelson.Compilation as Compilation
@@ -23,7 +22,6 @@ import qualified Juvix.Core.Application as App
 import qualified Juvix.Core.ErasedAnn.Prim as Prim
 import qualified Juvix.Core.ErasedAnn.Types as ErasedAnn
 import qualified Juvix.Core.IR.Evaluator as Eval
-import qualified Juvix.Core.IR.TransformExt.OnlyExts as OnlyExts
 import qualified Juvix.Core.IR.Typechecker.Types as TC
 import qualified Juvix.Core.IR.Types as IR
 import qualified Juvix.Core.IR.Types.Base as IR

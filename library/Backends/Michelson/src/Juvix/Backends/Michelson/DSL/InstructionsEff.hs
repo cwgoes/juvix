@@ -222,7 +222,7 @@ unboxDoubleTypeErr :: Untyped.T -> (Untyped.T, Untyped.T)
 unboxDoubleTypeErr (MT.Type (MT.TBigMap t1 t2) "") = (t1, t2)
 unboxDoubleTypeErr (MT.Type (MT.TLambda t1 t2) "") = (t1, t2)
 unboxDoubleTypeErr (MT.Type (MT.TMap t1 t2) "") = (t1, t2)
-unboxDoubleTypeErr (MT.Type (MT.TPair _ _ t1 t2) "") = (t1, t2)
+unboxDoubleTypeErr (MT.Type (MT.TPair _ _ _ _ t1 t2) "") = (t1, t2)
 unboxDoubleTypeErr (MT.Type (MT.TOr _ _ t1 t2) "") = (t1, t2)
 unboxDoubleTypeErr _ = error "not a type which takes two types"
 

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fdefer-typed-holes #-}
+
 module Juvix.Backends.Michelson.DSL.Contract where
 
 import Juvix.Library
@@ -30,13 +32,17 @@ dummyChainId = Core.dummyChainId
 dummyContractEnv :: Interpret.ContractEnv
 dummyContractEnv =
   Interpret.ContractEnv
-    { Interpret.ceNow = dummyStamp,
-      Interpret.ceMaxSteps = dummyStepsLeft,
-      Interpret.ceBalance = dummyMutez,
-      Interpret.ceContracts = dummyAccounts,
-      Interpret.ceSelf = dummyAddress,
-      Interpret.ceSource = dummyAddress,
-      Interpret.ceSender = dummyAddress,
-      Interpret.ceAmount = dummySend,
-      Interpret.ceChainId = dummyChainId
+    { ceNow = dummyStamp,
+      ceMaxSteps = dummyStepsLeft,
+      ceBalance = dummyMutez,
+      ceContracts = dummyAccounts,
+      ceSelf = dummyAddress,
+      ceSource = dummyAddress,
+      ceSender = dummyAddress,
+      ceAmount = dummySend,
+      ceChainId = dummyChainId,
+      ceVotingPowers = _,
+      ceOperationHash = _,
+      ceGlobalCounter = _,
+      ceLevel = _
     }

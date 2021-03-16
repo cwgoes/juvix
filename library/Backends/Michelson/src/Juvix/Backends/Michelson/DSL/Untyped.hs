@@ -46,7 +46,7 @@ contract :: T -> T
 contract = annotate . Untyped.TContract
 
 pair :: T -> T -> T
-pair = annotate ... Untyped.TPair "" ""
+pair = annotate ... Untyped.TPair "" "" "" ""
 
 or :: T -> T -> T
 or = annotate ... Untyped.TOr "" ""
