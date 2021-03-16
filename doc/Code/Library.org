@@ -1564,6 +1564,7 @@ done with no extra information needed. Thus we export the following passes
   + [[Core/Common/Context]]
   + [[Desugar/Types]]
   + [[ResolveOpenInfo]]
+  + [[Contextify/Sexp]]
   + [[Contextify/Transform]]
   + [[Contextify/Types]]
   + [[InfixPrecedence/Environment]]
@@ -1573,6 +1574,7 @@ done with no extra information needed. Thus we export the following passes
   + [[ModuleOpen/Transform]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Sexp]]
 ***** Environment <<FrontendContextualise/Environment>>
 - _Relies on_
   + [[Core/Common/Context]]
@@ -1609,6 +1611,14 @@ done with no extra information needed. Thus we export the following passes
   + [[Library]]
   + [[HashMap]]
   + [[NameSymbol]]
+****** Sexp <<Contextify/Sexp>>
+- _Relies on_
+  + [[Core/Common/Context]]
+  + [[NameSpace]]
+  + [[Contextify/Types]]
+  + [[Library]]
+  + [[NameSymbol]]
+  + [[Library/Sexp]]
 ****** Transform <<Contextify/Transform>>
 - _Relies on_
   + [[Core/Common/Context]]
@@ -1623,6 +1633,7 @@ done with no extra information needed. Thus we export the following passes
   + [[Desugar/Types]]
   + [[Library]]
   + [[NameSymbol]]
+  + [[Library/Sexp]]
 ***** InfixPrecedence
 ****** Environment <<InfixPrecedence/Environment>>
 - _Relies on_
@@ -1816,11 +1827,15 @@ done with no extra information needed. Thus we export the following passes
 **** Contextify
 - _Relies on_
   + [[Core/Common/Context]]
+  + [[Juvix/Desugar]]
   + [[Frontend/Parser]]
+  + [[Frontend/Sexp]]
   + [[Frontend/Types]]
   + [[FrontendContextualise]]
   + [[FrontendDesugar]]
   + [[Library]]
+  + [[Internal]]
+  + [[Library/Sexp]]
 **** Infix
 ***** ShuntYard <<Infix/ShuntYard>>
 - _Relies on_

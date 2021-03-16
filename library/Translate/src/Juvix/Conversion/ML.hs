@@ -24,10 +24,10 @@ op x
   | Sexp.isAtomNamed x ":type-class" = Target.TypeClass
   | Sexp.isAtomNamed x ":instance" = Target.TypeClassInstance
 op (name Sexp.:> form)
-  | named "declare" = Target.Declaration (declaration form)
   | named ":defsig-match" = Target.Function (defunSig form)
-  | named "type" = Target.Type (type' form)
+  | named "declare" = Target.Declaration (declaration form)
   | named "open" = Target.ModuleOpen (moduleOpen form)
+  | named "type" = Target.Type (type' form)
   where
     named = Sexp.isAtomNamed name
 op _ = error "malformed top level expression"

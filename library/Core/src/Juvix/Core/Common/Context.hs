@@ -15,7 +15,7 @@ import Control.Lens hiding ((|>))
 import Juvix.Core.Common.Context.Precedence
 import Juvix.Core.Common.Context.Types
 import qualified Juvix.Core.Common.NameSpace as NameSpace
-import Juvix.Library hiding (modify, toList)
+import Juvix.Library hiding (Sum, modify, toList)
 import qualified Juvix.Library as Lib
 import qualified Juvix.Library.HashMap as HashMap
 import qualified Juvix.Library.NameSymbol as NameSymbol
@@ -278,6 +278,93 @@ removeNameSpace sym t =
 removeTop :: Symbol -> T term ty sumRep -> T term ty sumRep
 removeTop sym t@T {topLevelMap} =
   t {topLevelMap = HashMap.delete sym topLevelMap}
+
+------------------------------------------------------------
+-- Global Traversals
+------------------------------------------------------------
+
+data ContextForms m term ty sumRep
+  = CtxForm
+      { sumF :: sumRep -> T term ty sumRep -> m sumRep,
+        termF :: term -> T term ty sumRep -> m term,
+        tyF :: ty -> T term ty sumRep -> m ty
+      }
+  deriving (Show)
+
+-- | @mapWithContextPure@ is just @mapWithContext@ but is pure. Since
+-- the function we take in is of type @ContextForms@ we must wrap our
+-- functions in the identity monad. See @mapWithContext@ for more
+-- information. We don't have to mutate, but often it's more useful
+-- that way for various reasons. This pure version is very useful in a
+-- simple pass through of the forms.
+mapWithContextPure ::
+  T term ty sumRep -> ContextForms Identity term ty sumRep -> T term ty sumRep
+mapWithContextPure t f = runIdentity (mapWithContext t f)
+
+-- | @mapWithContext@ starts at the top of the context and applies the
+-- given function f to all part of the data type it can. Note that
+-- records are treated as if they are part of the module above it if
+-- there is a signature!  See @mapCurrentContext@ for more information
+-- about specifics, as we just dispatch to that for the real changes
+mapWithContext ::
+  Monad m => T term ty sumRep -> ContextForms m term ty sumRep -> m (T term ty sumRep)
+mapWithContext t@T {topLevelMap, currentName} f = do
+  ctx <- foldM switchAndUpdate t tops
+  let Just finalCtx = inNameSpace (addTopName currentName) ctx
+  pure finalCtx
+  where
+    tops = fmap (addTopNameToSngle . pure) (HashMap.keys topLevelMap)
+    switchAndUpdate ctx name =
+      let Just t = inNameSpace name ctx
+       in mapCurrentContext f t
+
+-- | @mapCurrentContext@ maps f over the entire context, this function
+-- calls the function handed to it over the context. The function runs
+-- over the current form and the context, so any dependencies may be
+-- resolved and proper stored away.
+mapCurrentContext ::
+  Monad m => ContextForms m term ty sumRep -> T term ty sumRep -> m (T term ty sumRep)
+mapCurrentContext f ctx@T {currentNameSpace, currentName} =
+  foldM dispatch ctx names
+  where
+    names =
+      NameSpace.toList1FSymb (currentNameSpace ^. contents)
+    dispatch ctx (name, form) = do
+      -- Used for the def and sumcon case
+      -- Just run over the two parts that change
+      let defCase d@D {defTerm, defMTy} = do
+            newTerm <- termF f defTerm ctx
+            newTy <- traverse (\x -> tyF f x ctx) defMTy
+            pure $ d {defTerm = newTerm, defMTy = newTy}
+      case form of
+        Def d -> do
+          newDef <- defCase d
+          ctx
+            |> add name (Def newDef)
+            |> pure
+        Record r -> do
+          -- Do the signature call in the module above and re-insert it
+          -- into the current module
+          newTy <- traverse (\x -> tyF f x ctx) (recordMTy r)
+          -- now we should siwtch modules, note we are going to do a
+          -- direct insertion, so no need to reconstruct
+          let Just newCtx = inNameSpace (pure (NameSpace.extractValue name)) ctx
+          ctx' <- mapCurrentContext f newCtx
+          let ctx'' = set (_currentNameSpace . mTy) newTy ctx'
+          -- just switch back to where we need to be
+          let Just finalCtx = inNameSpace (addTopName currentName) ctx''
+          pure finalCtx
+        Unknown u -> do
+          t <- traverse (\x -> tyF f x ctx) u
+          pure $ add name (Unknown t) ctx
+        SumCon (Sum def name') -> do
+          newDef <- traverse defCase def
+          pure $ add name (SumCon (Sum newDef name')) ctx
+        TypeDeclar t -> do
+          newT <- sumF f t ctx
+          pure $ add name (TypeDeclar newT) ctx
+        CurrentNameSpace -> pure ctx
+        Information _ -> pure ctx
 
 ------------------------------------------------------------
 -- Helpers for switching the global NameSpace

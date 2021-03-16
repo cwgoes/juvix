@@ -12,7 +12,7 @@ data T b
       { public :: HashMap.T Symbol b,
         private :: HashMap.T Symbol b
       }
-  deriving (Show, Eq, Data, Functor, Foldable)
+  deriving (Show, Eq, Data, Functor, Foldable, Traversable)
 
 data List b
   = List
@@ -83,6 +83,11 @@ toList1 :: T v -> [(Symbol, From v)]
 toList1 ns =
   let List {publicL, privateL} = toList ns
    in (second Pub <$> publicL) <> (second Priv <$> privateL)
+
+toList1FSymb :: T v -> [(From Symbol, v)]
+toList1FSymb ns =
+  let List {publicL, privateL} = toList ns
+   in (first Pub <$> publicL) <> (first Priv <$> privateL)
 
 toList1' :: T v -> [(Symbol, v)]
 toList1' ns =

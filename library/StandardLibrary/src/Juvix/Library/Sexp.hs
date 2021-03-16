@@ -18,6 +18,8 @@ module Juvix.Library.Sexp
     atomFromT,
     groupBy2,
     assoc,
+    cadr,
+    foldSearchPred,
   )
 where
 
@@ -27,6 +29,46 @@ import qualified Juvix.Library.NameSymbol as NameSymbol
 import Juvix.Library.Sexp.Parser
 import Juvix.Library.Sexp.Types
 import Prelude (error)
+
+-- | @foldSearchPred@ is like foldPred with some notable exceptions.
+-- 1. Instead of recusing on the @predChange@ form, it will just leave
+--    the main form in tact.
+--    - This is because in this sort of task we
+--      will wish to maybe just change an aspect of it but maybe not
+--      the actual form!
+-- 2. We have a @predBind@ predicate which allows us to tell it what
+--    forms can cause binders. This is useful when we care about what
+--    is in scope for doing certain changes.
+--
+-- For arguments, this function takes a Sexp, along with 2 sets of
+-- pred function pairs. The function for the binding we take the rest
+-- of the computation, as we wish to only make the changes locally,
+-- much like a lexical binding/closure.
+foldSearchPred ::
+  Monad f =>
+  T ->
+  (NameSymbol.T -> Bool, Atom -> T -> f T) ->
+  (NameSymbol.T -> Bool, Atom -> T -> f T -> f T) ->
+  f T
+foldSearchPred t p1@(predChange, f) p2@(predBind, g) =
+  case t of
+    Cons a@(Atom atom@(A name _)) xs
+      | predChange name -> do
+        newCons <- f atom xs
+        case newCons of
+          Cons _ _ ->
+            Cons (car newCons) <$> foldSearchPred (cdr newCons) p1 p2
+          _ ->
+            pure newCons
+      | predBind name -> do
+        -- G takes the computation, as its changes are scoped over the
+        -- calls.
+        g atom xs $ do
+          Cons a <$> foldSearchPred xs p1 p2
+    Cons cs xs ->
+      Cons <$> foldSearchPred cs p1 p2 <*> foldSearchPred xs p1 p2
+    Nil -> pure Nil
+    Atom a -> pure $ Atom a
 
 foldPred :: T -> (NameSymbol.T -> Bool) -> (Atom -> T -> T) -> T
 foldPred t pred f =
@@ -111,9 +153,9 @@ nameFromT (Atom (A name _)) = Just name
 nameFromT _ = Nothing
 
 assoc :: T -> T -> Maybe T
-assoc t (car :> cdr)
-  | t == car = Just (cadr car)
-  | otherwise = assoc t cdr
+assoc t (car' :> cdr')
+  | t == car car' = Just (cadr car')
+  | otherwise = assoc t cdr'
 assoc _ Nil = Nothing
 assoc _ Atom {} = Nothing
 
