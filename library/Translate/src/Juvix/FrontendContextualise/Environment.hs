@@ -222,6 +222,15 @@ data Pass m
         tyF :: Sexp.Atom -> Sexp.T -> m Sexp.T
       }
 
+passContextSingle ::
+  (HasClosure m, ErrS m) =>
+  SexpContext ->
+  (NameSymbol.T -> Bool) ->
+  (Sexp.Atom -> Sexp.T -> m Sexp.T) ->
+  m SexpContext
+passContextSingle ctx trigger f =
+  passContext ctx trigger (Pass f f f)
+
 passContext ::
   (HasClosure m, ErrS m) => SexpContext -> (NameSymbol.T -> Bool) -> Pass m -> m SexpContext
 passContext ctx trigger Pass {sumF, termF, tyF} =
