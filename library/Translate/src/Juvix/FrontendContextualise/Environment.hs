@@ -215,17 +215,29 @@ genericBind :: Symbol -> Closure' -> Closure'
 genericBind name (Closure m) =
   Closure $ Map.insert name (Info Nothing [] Nothing) m
 
-passContext ctx f g h =
+data Pass m
+  = Pass
+      { sumF :: Sexp.Atom -> Sexp.T -> m Sexp.T,
+        termF :: Sexp.Atom -> Sexp.T -> m Sexp.T,
+        tyF :: Sexp.Atom -> Sexp.T -> m Sexp.T
+      }
+
+passContext ::
+  (HasClosure m, ErrS m) => SexpContext -> (NameSymbol.T -> Bool) -> Pass m -> m SexpContext
+passContext ctx trigger Pass {sumF, termF, tyF} =
   Context.mapWithContext
     ctx
     Context.CtxForm
-      { sumF = f,
-        termF = g,
-        tyF = h
+      { sumF = pass sumF,
+        termF = pass termF,
+        tyF = pass tyF
       }
   where
-    pass =
-      undefined
+    pass func form ctx =
+      Sexp.foldSearchPred
+        form
+        (trigger, func)
+        (bindingForms, searchAndClosure ctx)
 
 bindingForms :: (Eq a, IsString a) => a -> Bool
 bindingForms x =
@@ -242,10 +254,11 @@ searchAndClosure ctx a as cont
   | named ":open-in" = openIn ctx as cont
   | named ":declaim" = declaim as cont
   | named ":let-match" = letMatch as cont
-  | named ":let-type" = undefined
+  | named ":let-type" = letType as cont
   | named "type" = type' as cont
   where
     named = Sexp.isAtomNamed (Sexp.Atom a)
+searchAndClosure _ _ _ _ = error "imporper closure call"
 
 ------------------------------------------------------------
 -- searchAndClosure function dispatch table
